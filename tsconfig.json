@@ -1,13 +1,21 @@
 {
 	"compilerOptions": {
 		"skipLibCheck": true,
-	"resolveJsonModule": true,
-	"module": "NodeNext",
-	"noImplicitAny": false,
-	"removeComments": true,
-	"preserveConstEnums": true,
-	"sourceMap": false,
-	"noImplicitReturns": true
+		"target": "ES2020",
+		"module": "ESNext",
+		"jsx": "react-jsx",
+		"jsxImportSource": "@zsnout/ithkuil/script",
+		"esModuleInterop": true,
+		"moduleResolution": "NodeNext",
+		"lib": ["ES2020", "DOM", "ESNext.asyncIterable"],
+		"types": ["node"],
+		"resolveJsonModule": true,
+		"module": "NodeNext",
+		"noImplicitAny": false,
+		"removeComments": true,
+		"preserveConstEnums": true,
+		"sourceMap": false,
+		"noImplicitReturns": true
 	},
 	"strict": true,
 	"declaration": true,
