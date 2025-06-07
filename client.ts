@@ -1,7 +1,10 @@
 import { Client, Events, GatewayIntentBits, REST, Routes, SlashCommandBuilder, AttachmentBuilder } from 'discord.js'
 import { textToScript } from '@zsnout/ithkuil/script/index.js'
-import puppeteer from 'puppeteer'
+//import puppeteer from 'puppeteer'
+import { Resvg } from '@resvg/resvg-js';
 import secrets from './secrets.json' with { type: 'json' }
+import createSVG from './svg.js'
+
 
 // const commands = [
 	// {
@@ -10,36 +13,43 @@ import secrets from './secrets.json' with { type: 'json' }
 	// },
 // ];
 
-function svgToPng(svgText) {
-	return sharp(Buffer.from(svgText))
-			.png()
-			.toBuffer();
+//function svgToPng(svgText) {
+//	return sharp(Buffer.from(svgText))
+//			.png()
+//			.toBuffer();
+//}
+
+function svgToPngWithResvg(svgText) {
+	return new Resvg(svgText, {
+		fitTo: { mode: 'width', value: 512 }
+	}).render().asPng();
 }
 
-async function svgToPngWithPuppeteer(svg, options = {}) {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
 
-  const width = options.width || 512;
-  const height = options.height || 512;
-
-  await page.setViewport({ width, height });
-
-  const html = `
-    <html>
-      <body style="margin:0; padding:0; display:flex; align-items:center; justify-content:center;">
-        ${svg}
-      </body>
-    </html>
-  `;
-
-  await page.setContent(html);
-  const elementHandle = await page.$('svg');
-  const screenshotBuffer = await elementHandle.screenshot({ omitBackground: true });
-
-  await browser.close();
-  return screenshotBuffer;
-}
+//async function svgToPngWithPuppeteer(svg, options = {}) {
+//  const browser = await puppeteer.launch();
+//  const page = await browser.newPage();
+//
+//  const width = options.width || 512;
+//  const height = options.height || 512;
+//
+//  await page.setViewport({ width, height });
+//
+//  const html = `
+//    <html>
+//      <body style="margin:0; padding:0; display:flex; align-items:center; justify-content:center;">
+//        ${svg}
+//      </body>
+//    </html>
+//  `;
+//
+//  await page.setContent(html);
+//  const elementHandle = await page.$('svg');
+//  const screenshotBuffer = await elementHandle.screenshot({ omitBackground: true });
+//
+//  await browser.close();
+//  return screenshotBuffer;
+//}
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
@@ -62,12 +72,17 @@ const commands = [
 			const text = interaction.options.get('text')?.value
 			var result: AttachmentBuilder | null;
 			try {
-				const svg = await textToScript(text);
-				console.log("svg:", svg)
-				if(!svg.ok)
-					throw new Error(svg.reason);
+				// const svg = await textToScript(text);
+				// const svgRaw = await renderWord(text);
+				const svgRaw = await createSVG(text);
+				// console.log("svg:", svg)
+				// if(svg.ok !== true)
+					// throw new Error((svg as { reason: string }).reason);
 				// const pngBuffer = await svgToPng(svg.value)
-				const pngBuffer = await svgToPngWithPuppeteer(svg.value)
+				//const pngBuffer = await svgToPngWithPuppeteer(svg.value)
+				// console.log('type:', svg.value);
+				// const pngBuffer = await svgToPngWithResvg(svg.value)
+				const pngBuffer = await svgToPngWithResvg(svgRaw)
 				console.log("pngBuffer:", pngBuffer)
 				result = new AttachmentBuilder(pngBuffer, { name: 'image.png' });
 				console.log("result:", result)

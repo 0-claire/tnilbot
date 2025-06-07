@@ -1,7 +1,9 @@
 {
   "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@zsnout/ithkuil": "^0.1.121",
     "discord.js": "^14.19.3",
+    "jsdom": "^26.1.0",
     "sharp": "^0.34.2"
   },
   "type": "module"
