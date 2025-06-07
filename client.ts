@@ -5,27 +5,27 @@ import { Resvg } from '@resvg/resvg-js';
 import secrets from './secrets.json' with { type: 'json' }
 import createSVG from './svg.js'
 
+// TODO: move code into commands/ and into svg.ts(x) or tnil.ts(x)
 
-// const commands = [
-	// {
-		// name: 'render',
-		// description: 'Renders into TNIL script',
-	// },
-// ];
 
+// currently unused
+// sharp doesn't support needed svg features
 //function svgToPng(svgText) {
 //	return sharp(Buffer.from(svgText))
 //			.png()
 //			.toBuffer();
 //}
 
-function svgToPngWithResvg(svgText) {
-	return new Resvg(svgText, {
-		fitTo: { mode: 'width', value: 512 }
-	}).render().asPng();
-}
+// currently unused
+// not entirely sure why resvg didn't work
+//function svgToPngWithResvg(svgText) {
+//	return new Resvg(svgText, {
+//		fitTo: { mode: 'width', value: 512 }
+//	}).render().asPng();
+//}
 
 
+// TODO: puppeeteer might work it just won't install (claire@infinity). Test it
 //async function svgToPngWithPuppeteer(svg, options = {}) {
 //  const browser = await puppeteer.launch();
 //  const page = await browser.newPage();
@@ -53,10 +53,12 @@ function svgToPngWithResvg(svgText) {
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
+// Log successful login
 client.on(Events.ClientReady, readyClient => {
 	console.log(`Logged in as ${readyClient.user.tag}!`);
 });
 
+// define slash command data
 const commands = [
 	{ 
 		data: new SlashCommandBuilder()
@@ -106,6 +108,7 @@ const commands = [
 ]
 
 
+// Run slash command function on its receipt
 client.on(Events.InteractionCreate, async interaction => {
 	if (!interaction.isChatInputCommand()) return;
 
@@ -120,8 +123,10 @@ client.on(Events.InteractionCreate, async interaction => {
 	}
 });
 
+// Log in the bot
 client.login(secrets.token);
 
+// Reset the bot's slash commands
 const rest = new REST({ version: '10' }).setToken(secrets.token);
 
 try {

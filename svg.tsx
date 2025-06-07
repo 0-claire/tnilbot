@@ -2,6 +2,7 @@
 /* @jsxRuntime automatic */
 /* @jsxImportSource @zsnout/ithkuil/script */
 
+// This doc is to convert the raw svg string into a better formatted one that can be converted to PNG
 import {
   Anchor,
   CharacterRow,
