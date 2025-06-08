@@ -3,7 +3,10 @@ import { textToScript } from '@zsnout/ithkuil/script/index.js'
 //import puppeteer from 'puppeteer'
 import { Resvg } from '@resvg/resvg-js';
 import secrets from './secrets.json' with { type: 'json' }
-import createSVG from './svg.js'
+// import { NewMemoryFace, RenderMode } from 'freetype2';
+import { writeFileSync } from 'fs';
+import text2png from 'text2png';
+// import createSVG from './svg.js'
 
 // TODO: move code into commands/ and into svg.ts(x) or tnil.ts(x)
 
@@ -18,12 +21,23 @@ import createSVG from './svg.js'
 
 // currently unused
 // not entirely sure why resvg didn't work
-//function svgToPngWithResvg(svgText) {
-//	return new Resvg(svgText, {
-//		fitTo: { mode: 'width', value: 512 }
-//	}).render().asPng();
-//}
-
+function svgToPngWithResvg(svgText) {
+	console.log(svgText);
+	return new Resvg(svgText, {
+		fitTo: { mode: 'width', value: 512 }
+	}).render().asPng();
+}
+function drawCharsFromRaw(rawInput) {
+	var rawInputAsString = "·t_=^ä";
+	var pngBytes = text2png(rawInputAsString, {
+		font: '400px IthkuilBasic',
+		localFontPath: "/home/tortus/Downloads/IthkuilBasic.ttf",
+		localFontName: "Ithkuil Basic",
+		color: 'white'
+	});
+	return pngBytes;
+	// writeFileSync('test.png', pngBytes);
+}
 
 // TODO: puppeeteer might work it just won't install (claire@infinity). Test it
 //async function svgToPngWithPuppeteer(svg, options = {}) {
@@ -74,9 +88,9 @@ const commands = [
 			const text = interaction.options.get('text')?.value
 			var result: AttachmentBuilder | null;
 			try {
-				// const svg = await textToScript(text);
+				const svgRaw = await textToScript(text);
 				// const svgRaw = await renderWord(text);
-				const svgRaw = await createSVG(text);
+				// const svgRaw = await createSVG(text);
 				// console.log("svg:", svg)
 				// if(svg.ok !== true)
 					// throw new Error((svg as { reason: string }).reason);
@@ -84,8 +98,10 @@ const commands = [
 				//const pngBuffer = await svgToPngWithPuppeteer(svg.value)
 				// console.log('type:', svg.value);
 				// const pngBuffer = await svgToPngWithResvg(svg.value)
-				const pngBuffer = await svgToPngWithResvg(svgRaw)
-				console.log("pngBuffer:", pngBuffer)
+				// const pngBuffer = await svgToPngWithResvg(svgRaw)
+				const pngBuffer = await drawCharsFromRaw(svgRaw);
+				// const pngBuffer = "";
+				// console.log("pngBuffer:", pngBuffer)
 				result = new AttachmentBuilder(pngBuffer, { name: 'image.png' });
 				console.log("result:", result)
 			} catch(e) {
