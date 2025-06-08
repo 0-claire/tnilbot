@@ -27,5 +27,6 @@
 		"main.ts",
 		"client.ts",
 		"tnil.ts",
+		"textConversionInformation.ts"
 	],
 }

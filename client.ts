@@ -6,6 +6,7 @@ import secrets from './secrets.json' with { type: 'json' }
 // import { NewMemoryFace, RenderMode } from 'freetype2';
 import { writeFileSync } from 'fs';
 import text2png from 'text2png';
+import { PRIMARY_CORES, PRIMARY_TOP_LEFT, PRIMARY_BOTTOM_RIGHT, PRIMARY_TOP_RIGHT, PRIMARY_BOTTOM_LEFT } from './textConversionInformation.js';
 // import createSVG from './svg.js'
 
 // TODO: move code into commands/ and into svg.ts(x) or tnil.ts(x)
@@ -27,10 +28,87 @@ function svgToPngWithResvg(svgText) {
 		fitTo: { mode: 'width', value: 512 }
 	}).render().asPng();
 }
+function getCharType(chr) {
+	if(chr.stem)
+		return 1;
+	if(chr.core)
+		return 2;
+	if(chr.aspect)
+		return 3;
+	return 4;
+}
+function fillDefaultsPrimary(char) {
+	var core = PRIMARY_CORES[char.specification || "BSC"];
+	const topLeft = PRIMARY_TOP_LEFT[char.perspective || "M"][char.extension || "DEL"];
+	const bottomRight = PRIMARY_BOTTOM_RIGHT[char.function || "STA"][char.version || "PRC"][char.configuration?.startsWith("D") ? "D" : "M"][char.stem ?? 1];
+	const topRight = PRIMARY_TOP_RIGHT[char.essence || "NRM"][char.affiliation || "CSL"];
+	const bottomLeft = PRIMARY_BOTTOM_LEFT[char.configuration || "PX"];
+	if(topLeft)
+		core += `^${topLeft}`;
+	if(bottomRight)
+		core += `_${bottomRight}`;
+	if(topRight)
+		core += `>${topRight}`;
+	if(bottomLeft)
+		core += `<${bottomLeft}`;
+	return core;
+}
+function specialMarkersToCharacters(name) {
+	switch(name) {
+		case "CORE_GEMINATE":
+			return "=";
+		case "DOT":
+			return "a";
+		default:
+			return name;
+	}
+}
+function fillDefaultsSecondary(char) {
+	var core = char.core || "}";
+	if(char.top)
+		core += `^${specialMarkersToCharacters(char.top)}`;
+	if(char.bottom)
+		core += `_${specialMarkersToCharacters(char.bottom)}`;
+	if(char.superposed)
+		core += `^${specialMarkersToCharacters(char.superposed)}`;
+	if(char.underposed)
+		core += `_${specialMarkersToCharacters(char.underposed)}`;
+	return core;
+}
+function fillDefaultsTertiary(char) {
+	return "";
+}
+function fillDefaultsQuaternary(char) {
+	return "";
+}
+function rawInputToIthkuilFormattedString(rawIn) {
+	console.log(rawIn);
+	if(!rawIn.ok)
+		return "";
+	var outstr = "";
+	rawIn.value.forEach((chr) => {
+		// console.log(typeof(chr.construct));
+		switch(getCharType(chr)) {
+			case 1:
+				outstr += fillDefaultsPrimary(chr);
+				break;
+			case 2:
+				outstr += fillDefaultsSecondary(chr);
+				break;
+			case 3:
+				outstr += fillDefaultsTertiary(chr);
+				break;
+			case 4:
+				outstr += fillDefaultsQuaternary(chr);
+				break;
+		}
+	});
+	return outstr;
+}
 function drawCharsFromRaw(rawInput) {
-	var rawInputAsString = "·t_=^ä";
+	var rawInputAsString = rawInputToIthkuilFormattedString(rawInput);
 	var pngBytes = text2png(rawInputAsString, {
-		font: '400px IthkuilBasic',
+		font: '100px IthkuilBasic',
 		localFontPath: "/home/tortus/Downloads/IthkuilBasic.ttf",
 		localFontName: "Ithkuil Basic",
 		color: 'white'
@@ -38,32 +116,6 @@ function drawCharsFromRaw(rawInput) {
 	return pngBytes;
 	// writeFileSync('test.png', pngBytes);
 }
-
-// TODO: puppeeteer might work it just won't install (claire@infinity). Test it
-//async function svgToPngWithPuppeteer(svg, options = {}) {
-//  const browser = await puppeteer.launch();
-//  const page = await browser.newPage();
-//
-//  const width = options.width || 512;
-//  const height = options.height || 512;
-//
-//  await page.setViewport({ width, height });
-//
-//  const html = `
-//    <html>
-//      <body style="margin:0; padding:0; display:flex; align-items:center; justify-content:center;">
-//        ${svg}
-//      </body>
-//    </html>
-//  `;
-//
-//  await page.setContent(html);
-//  const elementHandle = await page.$('svg');
-//  const screenshotBuffer = await elementHandle.screenshot({ omitBackground: true });
-//
-//  await browser.close();
-//  return screenshotBuffer;
-//}
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
