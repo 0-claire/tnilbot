@@ -6,7 +6,7 @@ import secrets from './secrets.json' with { type: 'json' }
 // import { NewMemoryFace, RenderMode } from 'freetype2';
 import { writeFileSync } from 'fs';
 import text2png from 'text2png';
-import { PRIMARY_CORES, PRIMARY_TOP_LEFT, PRIMARY_BOTTOM_RIGHT, PRIMARY_TOP_RIGHT, PRIMARY_BOTTOM_LEFT } from './textConversionInformation.js';
+import { PRIMARY_CORES, PRIMARY_TOP_LEFT, PRIMARY_BOTTOM_RIGHT, PRIMARY_TOP_RIGHT, PRIMARY_BOTTOM_LEFT, DIACRITICS, TERTIARY_VALENCES, TERTIARY_ASPECTS_PHASES_EFFECTS } from './textConversionInformation.js';
 // import createSVG from './svg.js'
 
 // TODO: move code into commands/ and into svg.ts(x) or tnil.ts(x)
@@ -33,9 +33,9 @@ function getCharType(chr) {
 		return 1;
 	if(chr.core)
 		return 2;
-	if(chr.aspect)
-		return 3;
-	return 4;
+	if(chr.value)
+		return 4;
+	return 3;
 }
 function fillDefaultsPrimary(char) {
 	var core = PRIMARY_CORES[char.specification || "BSC"];
@@ -51,32 +51,68 @@ function fillDefaultsPrimary(char) {
 		core += `>${topRight}`;
 	if(bottomLeft)
 		core += `<${bottomLeft}`;
+	if(char.bottom) {
+		if(bottomRight)
+			core += "_";
+		core += `_${specialMarkersToCharacters(DIACRITICS[char.bottom])}`;
+	}
+	if(char.isSentenceInitial && core == "\\")
+		return ""; //elisions
+	if(char.isSentenceInitial && core == "\\_a")
+		return "·";
 	return core;
 }
 function specialMarkersToCharacters(name) {
 	switch(name) {
-		case "CORE_GEMINATE":
-			return "=";
-		case "DOT":
-			return "a";
-		default:
-			return name;
+		case "CORE_GEMINATE": return "=";
+		case "DOT": return "a";
+		case "HORIZ_BAR": return "ä";
+		case "CURVE_TO_LEFT": return "ò";
+		case "CURVE_TO_RIGHT": return "ó";
+		case "HORIZ_WITH_BOTTOM_LINE": return "e";
+		case "HORIZ_WITH_TOP_LINE": return "ë";
+		case "CURVE_TO_TOP": return "o";
+		case "CURVE_TO_BOTTOM": return "ö";
+		case "VERT_WITH_LEFT_LINE": return "ü";
+		case "VERT_WITH_RIGHT_LINE": return "u";
+		case "DIAG_BAR": return "i";
+		case "VERT_BAR": return "ï";
+		default: return name;
 	}
 }
 function fillDefaultsSecondary(char) {
 	var core = char.core || "}";
+	if(char.rotated)
+		core += "'";
 	if(char.top)
 		core += `^${specialMarkersToCharacters(char.top)}`;
 	if(char.bottom)
 		core += `_${specialMarkersToCharacters(char.bottom)}`;
 	if(char.superposed)
 		core += `^${specialMarkersToCharacters(char.superposed)}`;
-	if(char.underposed)
+	if(char.underposed) {
+		if(char.bottom)
+			core += "_"; // place lower just so it looks better
 		core += `_${specialMarkersToCharacters(char.underposed)}`;
+	}
 	return core;
 }
 function fillDefaultsTertiary(char) {
-	return "";
+	var valence = "";
+	if(char.top)
+		valence += `${TERTIARY_ASPECTS_PHASES_EFFECTS[char.top]}`;
+	valence += TERTIARY_VALENCES[char.valence || "MNO"];
+	if(char.bottom)
+		valence += `_${TERTIARY_ASPECTS_PHASES_EFFECTS[char.bottom]}`;
+	if(char.superposed) {
+		valence += `^${specialMarkersToCharacters(char.superposed)}`;
+	}
+	if(char.underposed) {
+		if(char.bottom)
+			valence += "_"
+		valence += `_${specialMarkersToCharacters(char.underposed)}`;
+	}
+	return valence;
 }
 function fillDefaultsQuaternary(char) {
 	return "";
