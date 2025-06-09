@@ -1,5 +1,5 @@
 import text2png from 'text2png';
-import { PRIMARY_CORES, PRIMARY_TOP_LEFT, PRIMARY_BOTTOM_RIGHT, PRIMARY_TOP_RIGHT, PRIMARY_BOTTOM_LEFT, DIACRITICS, TERTIARY_VALENCES, TERTIARY_ASPECTS_PHASES_EFFECTS, LEVELS, CASE_ILLOCUTION_VALIDATION, CASE_SCOPE, MOOD } from './textConversionInformation.js';
+import { PRIMARY_CORES, PRIMARY_TOP_LEFT, PRIMARY_BOTTOM_RIGHT, PRIMARY_TOP_RIGHT, PRIMARY_BOTTOM_LEFT, DIACRITICS, TERTIARY_VALENCES, TERTIARY_ASPECTS_PHASES_EFFECTS, LEVELS, CASE_ILLOCUTION_VALIDATION, CASE_SCOPE, MOOD, REGISTER, BIASES } from './textConversionInformation.js';
 import config from './config.js'
 
 function getCharType(chr) {
@@ -11,6 +11,10 @@ function getCharType(chr) {
 		return 4;
 	if(chr.absoluteLevel || chr.top || chr.valence || chr.bottom || chr.relativeLevel)
 		return 3;
+	if(chr.bias) // bias
+		return 5;
+	if(chr.mode) // register (type) x mode (mode)
+		return 6;
 	// otherwise this is a break character here
 	return -1;
 }
@@ -58,6 +62,7 @@ function specialMarkersToCharacters(name) {
 		case "VERT_WITH_RIGHT_LINE": return "u";
 		case "DIAG_BAR": return "i";
 		case "VERT_BAR": return "ï";
+		case "ALPHABETIC_PLACEHOLDER": return "{";
 		default: return name;
 	}
 }
@@ -77,6 +82,10 @@ function fillDefaultsSecondary(char) {
 			core += "_"; // place lower just so it looks better
 		core += `_${specialMarkersToCharacters(char.underposed)}`;
 	}
+	if(char.right)
+		core += `>${specialMarkersToCharacters(char.right)}`;
+	if(char.left)
+		core += `<${specialMarkersToCharacters(char.left)}`;
 	return core;
 }
 
@@ -109,8 +118,6 @@ function fillDefaultsQuaternary(char) {
 	console.log('quat char:', char);
 	// contents: case, illocution, validation, mood
 	var bar = "|";
-	// TODO: idk what type: 1 is for but it's probably important and needs a check somewhere
-	// type: 1, value: 'LOC', isInverse: false, isSlotVIIAffix: true
 	if(char.value) {
 		const ext = CASE_ILLOCUTION_VALIDATION[char.value];
 		console.log(char.value);
@@ -124,10 +131,9 @@ function fillDefaultsQuaternary(char) {
 		}
 	}
 	if(char.mood)
-		bar += `^${MOOD[char.mood]}`;
+		bar += `^${MOOD[char.mood] || ''}`;
 	if(char.caseScope)
-		bar += `_${CASE_SCOPE[char.caseScope]}`;
-	// TODO: these last 2 chicks below have not been done.
+		bar += `_${CASE_SCOPE[char.caseScope] || ''}`;
 	if(char.isSlotVIIAffix) {
 		if(char.isInverse)
 			bar += `_aó`
@@ -147,6 +153,23 @@ function fillDefaultsQuaternary(char) {
 	return bar;
 }
 
+function fillDefaultsRegisterMode(char) {
+	return REGISTER[char.type || 'NRR'][char.mode];
+}
+
+function fillBiasChar(char) {
+	var bias = "Ʃ";
+	var ext = BIASES[char.bias]
+	if(ext.dot === 'right')
+		bias += `${ext.prefix}>${specialMarkersToCharacters(DIACRITICS[ext.ext])}`;
+	else if(ext.dot === 'left')
+		bias += `${ext.prefix}<${specialMarkersToCharacters(DIACRITICS[ext.ext])}`;
+	else
+		bias += specialMarkersToCharacters(ext);
+	console.log('bias:', bias);
+	return bias;
+}
+
 function rawInputToIthkuilFormattedString(rawIn) {
 	console.log(rawIn);
 	if(!rawIn.ok)
@@ -154,6 +177,7 @@ function rawInputToIthkuilFormattedString(rawIn) {
 	var outstr = "";
 	rawIn.value.forEach((chr) => {
 		// console.log(typeof(chr.construct));
+		console.log('char:', chr);
 		switch(getCharType(chr)) {
 			case 1:
 				outstr += fillDefaultsPrimary(chr);
@@ -166,6 +190,11 @@ function rawInputToIthkuilFormattedString(rawIn) {
 				break;
 			case 4:
 				outstr += fillDefaultsQuaternary(chr);
+				break;
+			case 5:
+				outstr += fillBiasChar(chr);
+			case 6:
+				outstr += fillDefaultsRegisterMode(chr);
 				break;
 		}
 	});

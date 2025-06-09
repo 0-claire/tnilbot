@@ -308,3 +308,116 @@ export const CASE_SCOPE = {
 	CCP: 'ö',
 	CCV: 'ä',
 };
+
+export const REGISTER = {
+	NRR: {
+		standard: '·00',
+		alphabetic: '·10',
+		transcriptive: '·20',
+		transliterative: '·30',
+	},
+	DSV: {
+		standard: '·01',
+		alphabetic: '·11',
+		transcriptive: '·21',
+		transliterative: '·31',
+	},
+	PNT: {
+		standard: '·02',
+		alphabetic: '·12',
+		transcriptive: '·22',
+		transliterative: '·32',
+	},
+	SPF: {
+		standard: '·03',
+		alphabetic: '·13',
+		transcriptive: '·23',
+		transliterative: '·33',
+	},
+	EXM: {
+		standard: '·04',
+		alphabetic: '·14',
+		transcriptive: '·24',
+		transliterative: '·34',
+	},
+	CGT: {
+		standard: '·05',
+		alphabetic: '·15',
+		transcriptive: '·25',
+		transliterative: '·35',
+	},
+};
+
+
+export const BIASES = {
+  "ACC": "'",
+  "ACH": "'_l",
+  "ADS": "'_z",
+  "ANN": "'_s",
+  "ANP": "'_k",
+  "APB": "'_g",
+  "APH": "'_EXTENSION_GEMINATE",
+  "ARB": "'_CORE_GEMINATE",
+  "ATE": "'_d",
+  "CMD": "'_t",
+  "CNV": "'_š",
+  "COI": "'_p",
+  "CRP": "'_x",
+  "CRR": "'_ř",
+  "CTP": "'_ţ",
+  "CTV": "'_f",
+
+  // top
+  "DCC": { prefix: "'", dot: 'left', ext: 'a' },
+  "DEJ": "'^l",
+  "DES": "'^z",
+  "DFD": "'^s",
+  "DIS": "'^k",
+  "DLC": "'^g",
+  "DOL": "'^EXTENSION_GEMINATE",
+  "DPB": "'^CORE_GEMINATE",
+  "DRS": "'^d",
+  "DUB": "'^t",
+  "EUH": "'^š",
+  "EUP": "'^p",
+  "EXA": "'^x",
+  "EXG": "'^ř",
+  "MNF": "'^ţ",
+  "FOR": "'^f",
+
+  // rotated chars (no ' cuz script uses rotated by default)
+  "FSC": "",
+  "GRT": "_l",
+  "IDG": "_z",
+  "IFT": "_s",
+  "IPL": "_k",
+  "IPT": "_g",
+  "IRO": "_EXTENSION_GEMINATE",
+  "ISP": "_CORE_GEMINATE",
+  "IVD": "_d",
+  "MAN": "_t",
+  "OPT": "_š",
+  "PES": "_p",
+  "PPT": "_x",
+  "PPX": "_ř",
+  "PPV": "_ţ",
+  "PSC": "_f",
+
+  // top
+  "PSM": { prefix: '', dot: 'right', ext: 'a' },
+  "RAC": "^l",
+  "RFL": "^z",
+  "RSG": "^s",
+  "RPU": "^k",
+  "RVL": "^g",
+  "SAT": "^EXTENSION_GEMINATE",
+  "SGS": "^CORE_GEMINATE",
+  "SKP": "^d",
+  "SOL": "^t",
+  "STU": "^š",
+  "TRP": "^p",
+  "VEX": "^x",
+  // ř
+  // ţ
+  // f
+};         

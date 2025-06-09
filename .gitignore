@@ -2,3 +2,4 @@ discord-example-app/
 **.sw[a-zA-Z]
 *.js
 node_modules/**
+config.ts
