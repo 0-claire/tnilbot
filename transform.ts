@@ -3,13 +3,16 @@ import { PRIMARY_CORES, PRIMARY_TOP_LEFT, PRIMARY_BOTTOM_RIGHT, PRIMARY_TOP_RIGH
 import config from './config.js'
 
 function getCharType(chr) {
-	if(chr.stem)
+	if(chr.stem || chr.specification)
 		return 1;
 	if(chr.core)
 		return 2;
 	if(chr.value)
 		return 4;
-	return 3;
+	if(chr.absoluteLevel || chr.top || chr.valence || chr.bottom || chr.relativeLevel)
+		return 3;
+	// otherwise this is a break character here
+	return -1;
 }
 
 function fillDefaultsPrimary(char) {
@@ -17,7 +20,8 @@ function fillDefaultsPrimary(char) {
 	const topLeft = PRIMARY_TOP_LEFT[char.perspective || "M"][char.extension || "DEL"];
 	const bottomRight = PRIMARY_BOTTOM_RIGHT[char.function || "STA"][char.version || "PRC"][char.configuration?.startsWith("D") ? "D" : "M"][char.stem ?? 1];
 	const topRight = PRIMARY_TOP_RIGHT[char.essence || "NRM"][char.affiliation || "CSL"];
-	const bottomLeft = PRIMARY_BOTTOM_LEFT[char.configuration || "PX"];
+	const plexity = char.configuration || "PX";
+	const bottomLeft = PRIMARY_BOTTOM_LEFT[plexity.substring(plexity.length-2)];
 	if(topLeft)
 		core += `^${topLeft}`;
 	if(bottomRight)
@@ -41,6 +45,7 @@ function fillDefaultsPrimary(char) {
 function specialMarkersToCharacters(name) {
 	switch(name) {
 		case "CORE_GEMINATE": return "=";
+		case "STANDARD_PLACEHOLDER": return "}";
 		case "DOT": return "a";
 		case "HORIZ_BAR": return "ä";
 		case "CURVE_TO_LEFT": return "ò";
@@ -58,7 +63,7 @@ function specialMarkersToCharacters(name) {
 }
 
 function fillDefaultsSecondary(char) {
-	var core = char.core || "}";
+	var core = specialMarkersToCharacters(char.core || "STANDARD_PLACEHOLDER");
 	if(char.rotated)
 		core += "'";
 	if(char.top)
@@ -108,6 +113,7 @@ function fillDefaultsQuaternary(char) {
 	// type: 1, value: 'LOC', isInverse: false, isSlotVIIAffix: true
 	if(char.value) {
 		const ext = CASE_ILLOCUTION_VALIDATION[char.value];
+		console.log(char.value);
 		if(typeof ext === 'string') {
 			bar += `${ext}`;
 		} else {
@@ -122,10 +128,22 @@ function fillDefaultsQuaternary(char) {
 	if(char.caseScope)
 		bar += `_${CASE_SCOPE[char.caseScope]}`;
 	// TODO: these last 2 chicks below have not been done.
-	if(char.isInverse)
-		bar += `${CASE_ILLOCUTION_VALIDATION[char.value]}`;
-	if(char.isSlotVIIAffix)
-		bar += `${CASE_ILLOCUTION_VALIDATION[char.value]}`;
+	if(char.isSlotVIIAffix) {
+		if(char.isInverse)
+			bar += `_aó`
+		else
+			bar += `_aò`;
+		switch(char.type) {
+			case 2:
+				bar += `^a`;
+				break;
+			case 3:
+				bar += `^ä`;
+				break;
+			default:
+				break;
+		}
+	}
 	return bar;
 }
 
