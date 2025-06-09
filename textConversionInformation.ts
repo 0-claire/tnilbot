@@ -104,7 +104,7 @@ export const TERTIARY_VALENCES = {
     MNO: "≡aa",
     PRL: "≡az",
     CRO: "≡za",
-    ICP: "≡zz",
+    RCP: "≡zz",
     CPL: "≡sa",
     DUP: "≡as",
     DEM: "≡af",
@@ -169,4 +169,142 @@ export const TERTIARY_ASPECTS_PHASES_EFFECTS = {
     "ITC": "⋮řäa",
     "MTV": "⋮xäa",
     "SQN": "⋮=äa",
+};
+
+export const LEVELS = {
+	// Levels
+	"MIN": "a",
+	"SBE": "ë",
+	"IFR": "ü",
+	"DFC": "o",
+	"EQU": "ï",
+	"SUR": "ö",
+	"SPL": "u",
+	"SPQ": "e",
+	"MAX": "ä",
+};
+
+export const CASE_ILLOCUTION_VALIDATION = {
+	// 1 Transrelative
+	THM: { top: undefined, bottom: undefined }, 
+	INS: { top: undefined, bottom: 'd' }, 
+	ABS: { top: undefined, bottom: 'š' }, 
+	AFF: { top: undefined, bottom: 'g' }, 
+	STM: { top: undefined, bottom: 'p' }, 
+	EFF: { top: undefined, bottom: 't' }, 
+	ERG: { top: undefined, bottom: 'k' }, 
+	DAT: { top: undefined, bottom: 'b' }, 
+	IND: { top: undefined, bottom: 'm' }, 
+
+	// 2 Appositive
+	POS: { top: 'd', bottom: undefined }, 
+	PRP: { top: 'd', bottom: 'd' }, 
+	GEN: { top: 'd', bottom: 'š' }, 
+	ATT: { top: 'd', bottom: 'g' }, 
+	PDC: { top: 'd', bottom: 'p' }, 
+	ITP: { top: 'd', bottom: 't' }, 
+	OGN: { top: 'd', bottom: 'k' }, 
+	IDP: { top: 'd', bottom: 'b' }, 
+	PAR: { top: 'd', bottom: 'm' }, 
+
+	// 3 Associative
+	APL: { top: 'š', bottom: undefined }, 
+	PUR: { top: 'š', bottom: 'd' }, 
+	TRA: { top: 'š', bottom: 'š' }, 
+	DFR: { top: 'š', bottom: 'g' }, 
+	CRS: { top: 'š', bottom: 'p' }, 
+	TSP: { top: 'š', bottom: 't' }, 
+	CMM: { top: 'š', bottom: 'k' }, 
+	CMP: { top: 'š', bottom: 'b' }, 
+	CSD: { top: 'š', bottom: 'm' }, 
+
+	// 4 Adverbial
+	FUN: { top: 'g', bottom: undefined }, 
+	TFM: { top: 'g', bottom: 'd' }, 
+	CLA: { top: 'g', bottom: 'š' }, 
+	RSL: { top: 'g', bottom: 'g' }, 
+	CSM: { top: 'g', bottom: 'p' }, 
+	CON: { top: 'g', bottom: 't' }, 
+	AVR: { top: 'g', bottom: 'k' }, 
+	CVS: { top: 'g', bottom: 'b' }, 
+	SIT: { top: 'g', bottom: 'm' }, 
+
+	// 5 Relational
+	PRN: { top: 'p', bottom: undefined }, 
+	DSP: { top: 'p', bottom: 'd' }, 
+	COR: { top: 'p', bottom: 'š' }, 
+	CPS: { top: 'p', bottom: 'g' }, 
+	COM: { top: 'p', bottom: 'p' }, 
+	UTL: { top: 'p', bottom: 't' }, 
+	PRD: { top: 'p', bottom: 'k' }, 
+	RLT: { top: 'p', bottom: 'm' }, 
+
+	// 6 Affinitive
+	ACT: { top: 't', bottom: undefined }, 
+	ASI: { top: 't', bottom: 'd' }, 
+	ESS: { top: 't', bottom: 'š' }, 
+	TRM: { top: 't', bottom: 'g' }, 
+	SEL: { top: 't', bottom: 'p' }, 
+	CFM: { top: 't', bottom: 't' }, 
+	DEP: { top: 't', bottom: 'k' }, 
+	VOC: { top: 't', bottom: 'm' }, 
+
+	// 7 ST-1
+	LOC: { top: 'k', bottom: undefined }, 
+	ATD: { top: 'k', bottom: 'd' }, 
+	ALL: { top: 'k', bottom: 'š' }, 
+	ABL: { top: 'k', bottom: 'g' }, 
+	ORI: { top: 'k', bottom: 'p' }, 
+	IRL: { top: 'k', bottom: 't' }, 
+	INV: { top: 'k', bottom: 'k' }, 
+	NAV: { top: 'k', bottom: 'm' }, 
+
+	// 8 ST-2
+	CNR: { top: 'b', bottom: undefined }, 
+	ASS: { top: 'b', bottom: 'd' }, 
+	PER: { top: 'b', bottom: 'š' }, 
+	PRO: { top: 'b', bottom: 'g' }, 
+	PCV: { top: 'b', bottom: 'p' }, 
+	PCR: { top: 'b', bottom: 't' }, 
+	ELP: { top: 'b', bottom: 'k' }, 
+	PLM: { top: 'b', bottom: 'm' }, 
+
+	// TODO: test ASR
+	ASR: '^s_s',
+	DIR: '^ḑ',
+	DEC: '^f',
+	IRG: '^ř',
+	VRF: '^v',
+	ADM: '^ţ',
+	POT: '^x',
+	HOR: '^n',
+	CNJ: '^z',
+
+	OBS: '^s_s',
+	REC: '^s_ḑ',
+	PUP: '^s_f',
+	RPR: '^s_ř',
+	IMA: '^s_v',
+	CVN: '^s_ţ',
+	ITU: '^s_x',
+	INF: '^s_n',
+	USP: '^s_z',
+};
+
+export const MOOD = {
+	FAC: undefined,
+	SUB: 'a',
+	ASM: 'ï',
+	SPC: 'o',
+	COU: 'ö',
+	HYP: 'ä',
+};
+
+export const CASE_SCOPE = {
+	CCN: undefined,
+	CCA: 'a',
+	CCS: 'ï',
+	CCQ: 'o',
+	CCP: 'ö',
+	CCV: 'ä',
 };
