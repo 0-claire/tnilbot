@@ -1,13 +1,14 @@
 {
+	"alias": {
+		"@zsnout/ithkuil/scripts/jsx-runtime": "@zsnout/ithkuil/jsx-runtime"
+	},
 	"compilerOptions": {
 		"skipLibCheck": true,
 		"target": "ES2020",
 		"module": "ESNext",
-		"jsx": "react-jsx",
-		"jsxImportSource": "@zsnout/ithkuil/script",
 		"esModuleInterop": true,
 		"moduleResolution": "NodeNext",
-		"lib": ["ES2020", "DOM", "ESNext.asyncIterable"],
+		"resolveJsonModule": true,
 		"types": ["node"],
 		"resolveJsonModule": true,
 		"module": "NodeNext",
@@ -22,6 +23,7 @@
 	"files": [
 		"main.ts",
 		"client.ts",
-		"tnil.ts"
-	]
+		"tnil.ts",
+		"textConversionInformation.ts"
+	],
 }

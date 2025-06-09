@@ -1,7 +1,7 @@
 import { Client, Events, GatewayIntentBits, REST, Routes, SlashCommandBuilder, AttachmentBuilder } from 'discord.js'
 import { textToScript } from '@zsnout/ithkuil/script/index.js'
-import convert from './svg.js'
 import secrets from './secrets.json' with { type: 'json' }
+import drawCharsFromRaw from './transform.js'
 
 // TODO: move code into commands/ and into svg.ts(x) or tnil.ts(x)
 
@@ -28,13 +28,8 @@ const commands = [
 			const text = interaction.options.get('text')?.value
 			var result: AttachmentBuilder | null;
 			try {
-				const svg = await textToScript(text);
-				if(svg.ok !== true)
-					throw new Error((svg as { reason: string }).reason);
-				// const pngBuffer = await svgToPng(svg.value)
-				console.log("svg:", svg)
-				const pngBuffer = await convert(((svg as { value: unknown }) as { value: string }).value)
-				console.log("pngBuffer:", pngBuffer)
+				const svgRaw = await textToScript(text);
+				const pngBuffer = await drawCharsFromRaw(svgRaw);
 				result = new AttachmentBuilder(pngBuffer, { name: 'image.png' });
 				console.log("result:", result)
 			} catch(e) {
