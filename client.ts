@@ -1,55 +1,9 @@
 import { Client, Events, GatewayIntentBits, REST, Routes, SlashCommandBuilder, AttachmentBuilder } from 'discord.js'
 import { textToScript } from '@zsnout/ithkuil/script/index.js'
-//import puppeteer from 'puppeteer'
-import { Resvg } from '@resvg/resvg-js';
+import convert from './svg.js'
 import secrets from './secrets.json' with { type: 'json' }
-import createSVG from './svg.js'
 
 // TODO: move code into commands/ and into svg.ts(x) or tnil.ts(x)
-
-
-// currently unused
-// sharp doesn't support needed svg features
-//function svgToPng(svgText) {
-//	return sharp(Buffer.from(svgText))
-//			.png()
-//			.toBuffer();
-//}
-
-// currently unused
-// not entirely sure why resvg didn't work
-//function svgToPngWithResvg(svgText) {
-//	return new Resvg(svgText, {
-//		fitTo: { mode: 'width', value: 512 }
-//	}).render().asPng();
-//}
-
-
-// TODO: puppeeteer might work it just won't install (claire@infinity). Test it
-//async function svgToPngWithPuppeteer(svg, options = {}) {
-//  const browser = await puppeteer.launch();
-//  const page = await browser.newPage();
-//
-//  const width = options.width || 512;
-//  const height = options.height || 512;
-//
-//  await page.setViewport({ width, height });
-//
-//  const html = `
-//    <html>
-//      <body style="margin:0; padding:0; display:flex; align-items:center; justify-content:center;">
-//        ${svg}
-//      </body>
-//    </html>
-//  `;
-//
-//  await page.setContent(html);
-//  const elementHandle = await page.$('svg');
-//  const screenshotBuffer = await elementHandle.screenshot({ omitBackground: true });
-//
-//  await browser.close();
-//  return screenshotBuffer;
-//}
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
@@ -74,17 +28,12 @@ const commands = [
 			const text = interaction.options.get('text')?.value
 			var result: AttachmentBuilder | null;
 			try {
-				// const svg = await textToScript(text);
-				// const svgRaw = await renderWord(text);
-				const svgRaw = await createSVG(text);
-				// console.log("svg:", svg)
-				// if(svg.ok !== true)
-					// throw new Error((svg as { reason: string }).reason);
+				const svg = await textToScript(text);
+				if(svg.ok !== true)
+					throw new Error((svg as { reason: string }).reason);
 				// const pngBuffer = await svgToPng(svg.value)
-				//const pngBuffer = await svgToPngWithPuppeteer(svg.value)
-				// console.log('type:', svg.value);
-				// const pngBuffer = await svgToPngWithResvg(svg.value)
-				const pngBuffer = await svgToPngWithResvg(svgRaw)
+				console.log("svg:", svg)
+				const pngBuffer = await convert(((svg as { value: unknown }) as { value: string }).value)
 				console.log("pngBuffer:", pngBuffer)
 				result = new AttachmentBuilder(pngBuffer, { name: 'image.png' });
 				console.log("result:", result)
@@ -92,9 +41,6 @@ const commands = [
 				result = null;
 				console.log(e);
 			}
-			// console.log('running subcommand for interaction:', interaction);
-			// await interaction.reply(interaction.options.get('text') || 'no result');
-			// console.log('interaction.text:', interaction.options.get('text'));
 			if(result) {
 				await interaction.reply({
 					content: `text: ||\`${ text || 'null'}\`||`,
