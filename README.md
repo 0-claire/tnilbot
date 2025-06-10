@@ -2,14 +2,29 @@
 
 # Roadmap
 
-- [ ] romanization -> script (w spoilered original) slash command)
-- [ ] /render using a reply to someone's message. Or /renderreply
-- [ ] word builder
+- [x] romanization -> script (w spoilered original) slash command)
+- [ ] Rendering support
+    - [x] Primary chars
+    - [x] Secondary chars + extensions
+    - [x] Tert chars
+    - [x] Quat chars
+    - [x] Diacritics
+    - [x] Registers & Modes
+    - [x] Affixes (specialized Cs roots)
+    - [x] Biases
+    - [ ] Numbers
+        - [x] Single numbers
+        - [ ] Compound numbers
+    - [ ] Tones in alphabetic writing
+- [ ] Render replied message
+- [ ] Edit rendered message
 - [ ] Quizzes
     - [ ] Cs chars/secondaries
     - [ ] Cs/secondary extensions
     - [ ] Primary chars & diacritics
-- [ ] Affixes
+- [ ] word builder
+- [ ] Support for elision settings
+- [ ] Potential per-channel "always render my/all messages" setting
 
 # Development
 
@@ -25,7 +40,7 @@
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html)
 
 # Tasks
-- fix bias adjuncts looking weird
+- elide quaternaries by default
 - check numeric parsing (and if numeric roots need special handling; I suppose zsnout does this already if so)
 - add intro to this README
 - add some copyleft foss copyright

@@ -2,21 +2,29 @@ import text2png from 'text2png';
 import { PRIMARY_CORES, PRIMARY_TOP_LEFT, PRIMARY_BOTTOM_RIGHT, PRIMARY_TOP_RIGHT, PRIMARY_BOTTOM_LEFT, DIACRITICS, TERTIARY_VALENCES, TERTIARY_ASPECTS_PHASES_EFFECTS, LEVELS, CASE_ILLOCUTION_VALIDATION, CASE_SCOPE, MOOD, REGISTER, BIASES } from './textConversionInformation.js';
 import config from './config.js'
 
+var lastChartype: 1|2|3|4|5|6|7|null = null;
+
 function getCharType(chr) {
-	if(chr.stem || chr.specification)
-		return 1;
+	var charType = -1;
+	if(['stem', 'specification'].some(p => chr.hasOwnProperty(p)))
+		charType = 1;
 	if(chr.core)
-		return 2;
-	if(chr.value)
-		return 4;
-	if(chr.absoluteLevel || chr.top || chr.valence || chr.bottom || chr.relativeLevel)
-		return 3;
+		charType = 2;
+	if(typeof chr.value === 'string')
+		charType = 4;
+	if(['absoluteLevel', 'valence', 'relativeLevel'].some(p => chr.hasOwnProperty(p)))
+		charType = 3;
 	if(chr.bias) // bias
-		return 5;
+		charType = 5;
 	if(chr.mode) // register (type) x mode (mode)
-		return 6;
-	// otherwise this is a break character here
-	return -1;
+		charType = 6;
+	if(typeof chr.value === 'number')
+		charType = 7; // numerals
+	else
+		charType = -1; // otherwise this is a break character here
+
+	lastChartype = charType;
+	return charType;
 }
 
 function fillDefaultsPrimary(char) {
@@ -28,6 +36,7 @@ function fillDefaultsPrimary(char) {
 	const bottomLeft = PRIMARY_BOTTOM_LEFT[plexity.substring(plexity.length-2)];
 	if(topLeft)
 		core += `^${topLeft}`;
+	// console.log('bottomright:', bottomRight);
 	if(bottomRight)
 		core += `_${bottomRight}`;
 	if(topRight)
@@ -115,12 +124,10 @@ function fillDefaultsTertiary(char) {
 }
 
 function fillDefaultsQuaternary(char) {
-	console.log('quat char:', char);
 	// contents: case, illocution, validation, mood
 	var bar = "|";
 	if(char.value) {
 		const ext = CASE_ILLOCUTION_VALIDATION[char.value];
-		console.log(char.value);
 		if(typeof ext === 'string') {
 			bar += `${ext}`;
 		} else {
@@ -130,10 +137,10 @@ function fillDefaultsQuaternary(char) {
 				bar += `_${ext.bottom}`;
 		}
 	}
-	if(char.mood)
-		bar += `^${MOOD[char.mood] || ''}`;
-	if(char.caseScope)
-		bar += `_${CASE_SCOPE[char.caseScope] || ''}`;
+	if(char.mood && MOOD[char.mood])
+		bar += `^${MOOD[char.mood]}`;
+	if(char.caseScope && CASE_SCOPE[char.caseScope])
+		bar += `_${CASE_SCOPE[char.caseScope]}`;
 	if(char.isSlotVIIAffix) {
 		if(char.isInverse)
 			bar += `_aó`
@@ -150,7 +157,16 @@ function fillDefaultsQuaternary(char) {
 				break;
 		}
 	}
-	return bar;
+	// ellision; only elide Cr root verbal quats with ASR and default values besides validation, and nominal quats with default values that are not affixes.
+	// Never elide referential quaternaries, and don't elide Cs root or personal reference root quaternaries with non-OBS validation or non-THM case as they can't be shown with diacritics
+	// this check doesn't elide quats for Cr root formatives with default values besides case or ill+val
+	// TODO: we may need a more robus processor that can identify formatives and elide chars from them and apply the information as diacritics to previous chars, unless zsnout allows for such through a parameter
+	if((char.value === "OBS" || char.value === 'THM') && char.mood === undefined && char.caseScope === undefined)
+		return "";
+	// if(char.mood === undefined && char.caseScope === undefined && !char.belongsToReferential && !char.belongsToCsFormative)
+		// return "";
+	else
+		return bar;
 }
 
 function fillDefaultsRegisterMode(char) {
@@ -166,19 +182,24 @@ function fillBiasChar(char) {
 		bias += `${ext.prefix}<${specialMarkersToCharacters(DIACRITICS[ext.ext])}`;
 	else
 		bias += specialMarkersToCharacters(ext);
-	console.log('bias:', bias);
 	return bias;
 }
 
+
+function fillDefaultsNumeral(char): string {
+	// process numerals by concatting their values and then converting to int
+	return `${char.value}`;
+}
+
 function rawInputToIthkuilFormattedString(rawIn) {
-	console.log(rawIn);
+	console.log('rawIn:', rawIn);
 	if(!rawIn.ok)
 		return "";
 	var outstr = "";
 	rawIn.value.forEach((chr) => {
-		// console.log(typeof(chr.construct));
-		console.log('char:', chr);
-		switch(getCharType(chr)) {
+		const charType = getCharType(chr);
+		console.log(`processing char of type ${charType}:`, chr);
+		switch(charType) {
 			case 1:
 				outstr += fillDefaultsPrimary(chr);
 				break;
@@ -193,15 +214,23 @@ function rawInputToIthkuilFormattedString(rawIn) {
 				break;
 			case 5:
 				outstr += fillBiasChar(chr);
+				break;
 			case 6:
 				outstr += fillDefaultsRegisterMode(chr);
 				break;
+			case 7:
+				outstr += fillDefaultsNumeral(chr);
+				break;
+			default:
+				break;
 		}
+		console.log('outstr:', outstr)
 	});
 	return outstr;
 }
 function drawCharsFromRaw(rawInput) {
 	var rawInputAsString = rawInputToIthkuilFormattedString(rawInput);
+	console.log('Rendering text:', rawInputAsString);
 	var pngBytes = text2png(rawInputAsString, {
 		font: config.font,
 		localFontPath: config.localFontPath,

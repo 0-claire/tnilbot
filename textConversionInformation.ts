@@ -291,6 +291,18 @@ export const CASE_ILLOCUTION_VALIDATION = {
 	USP: '^s_z',
 };
 
+// export const VALIDATIONS = [
+	// OBS: '^s_s',
+	// REC: '^s_ḑ',
+	// PUP: '^s_f',
+	// RPR: '^s_ř',
+	// IMA: '^s_v',
+	// CVN: '^s_ţ',
+	// ITU: '^s_x',
+	// INF: '^s_n',
+	// USP: '^s_z',
+// ];
+
 export const MOOD = {
 	FAC: undefined,
 	SUB: 'a',
