@@ -1,4 +1,5 @@
 import text2png from 'text2png';
+import { Result } from '@zsnout/ithkuil/script'
 import { PRIMARY_CORES, PRIMARY_TOP_LEFT, PRIMARY_BOTTOM_RIGHT, PRIMARY_TOP_RIGHT, PRIMARY_BOTTOM_LEFT, DIACRITICS, TERTIARY_VALENCES, TERTIARY_ASPECTS_PHASES_EFFECTS, LEVELS, CASE_ILLOCUTION_VALIDATION, CASE_SCOPE, MOOD, REGISTER, BIASES } from './textConversionInformation.js';
 import config from './config.js'
 
@@ -95,6 +96,7 @@ function fillDefaultsSecondary(char) {
 	}
 	if(char.right)
 		core += `>${specialMarkersToCharacters(char.right)}`;
+	// TODO: move this further right with chars like k
 	if(char.left)
 		core += `<${specialMarkersToCharacters(char.left)}`;
 	return core;
@@ -163,7 +165,7 @@ function fillDefaultsQuaternary(char) {
 	// Never elide referential quaternaries, and don't elide Cs root or personal reference root quaternaries with non-OBS validation or non-THM case as they can't be shown with diacritics
 	// this check doesn't elide quats for Cr root formatives with default values besides case or ill+val
 	// TODO: we may need a more robus processor that can identify formatives and elide chars from them and apply the information as diacritics to previous chars, unless zsnout allows for such through a parameter
-	if((char.value === "OBS" || char.value === 'THM') && char.mood === undefined && char.caseScope === undefined)
+	if((char.value === "OBS" || char.value === 'THM') && char.mood === undefined && char.caseScope === undefined && !char.isSlotVIIAffix)
 		return "";
 	// if(char.mood === undefined && char.caseScope === undefined && !char.belongsToReferential && !char.belongsToCsFormative)
 		// return "";
@@ -193,13 +195,11 @@ function fillDefaultsNumeral(char): string {
 	return `${char.value}`;
 }
 
-function rawInputToIthkuilFormattedString(rawIn) {
+function parserObjectToFontCompatibleString(rawIn) {
 	console.log('rawIn:', rawIn);
-	if(!rawIn.ok)
-		return "";
 	// TODO: throw and catch error, informing user
 	var outstr = "";
-	rawIn.value.forEach((chr) => {
+	rawIn.forEach((chr) => {
 		const charType = getCharType(chr);
 		console.log(`processing char of type ${charType}:`, chr);
 		switch(charType) {
@@ -231,14 +231,41 @@ function rawInputToIthkuilFormattedString(rawIn) {
 	});
 	return outstr;
 }
-function drawCharsFromRaw(rawInput) {
-	var rawInputAsString = rawInputToIthkuilFormattedString(rawInput);
-	console.log('Rendering text:', rawInputAsString);
-	var pngBytes = text2png(rawInputAsString, {
+
+
+function parserObjToFontChars() {
+}
+
+async function drawCharsFromRaw(parserObjects: Array<Result<any>>) {
+	// console.log('parserObject:', parserObject);
+	
+	const inputWordsAsParserObjects: Array<Array<Result<any>>> = [];
+
+	for(var object of parserObjects) {
+		object = await object
+		console.log('object:', object);
+		if(!object.ok) {
+			throw new Error("Parsing error");
+		} else {
+			inputWordsAsParserObjects.push(object.value);
+		}
+	}
+
+	var fontCompatibleString = '';
+
+	for(const wordObject of inputWordsAsParserObjects) {
+		if(fontCompatibleString.length > 0 && fontCompatibleString.at(-1) !== ' ')
+			fontCompatibleString += ' ';
+		fontCompatibleString += parserObjectToFontCompatibleString(wordObject);
+	}
+
+	console.log('Rendering text:', fontCompatibleString);
+	var pngBytes = text2png(fontCompatibleString, {
 		font: config.font,
 		localFontPath: config.localFontPath,
 		localFontName: config.localFontName,
-		color: 'white'
+		color: 'white',
+		letterSpacing: -200,
 	});
 	return pngBytes;
 }
