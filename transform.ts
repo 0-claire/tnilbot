@@ -6,20 +6,21 @@ type CharType =  -1|1|2|3|4|5|6|7;
 var lastChartype: CharType | null = null;
 
 function getCharType(chr): CharType {
-	var charType: CharType = -1;
-	if(['stem', 'specification'].some(p => chr.hasOwnProperty(p)))
+	var charType: CharType;
+
+	if(['stem', 'specification', 'context'].some(p => chr.hasOwnProperty(p)))
 		charType = 1;
-	if(chr.core)
+	else if(chr.core)
 		charType = 2;
-	if(typeof chr.value === 'string')
+	else if(typeof chr.value === 'string')
 		charType = 4;
-	if(['absoluteLevel', 'valence', 'relativeLevel'].some(p => chr.hasOwnProperty(p)))
+	else if(['absoluteLevel', 'valence', 'relativeLevel'].some(p => chr.hasOwnProperty(p)))
 		charType = 3;
-	if(chr.bias) // bias
+	else if(chr.bias) // bias
 		charType = 5;
-	if(chr.mode) // register (type) x mode (mode)
+	else if(chr.mode) // register (type) x mode (mode)
 		charType = 6;
-	if(typeof chr.value === 'number')
+	else if(typeof chr.value === 'number')
 		charType = 7; // numerals
 	else
 		charType = -1; // otherwise this is a break character here
@@ -196,6 +197,7 @@ function rawInputToIthkuilFormattedString(rawIn) {
 	console.log('rawIn:', rawIn);
 	if(!rawIn.ok)
 		return "";
+	// TODO: throw and catch error, informing user
 	var outstr = "";
 	rawIn.value.forEach((chr) => {
 		const charType = getCharType(chr);
