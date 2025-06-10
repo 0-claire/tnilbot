@@ -11,6 +11,7 @@
     - [x] Diacritics
     - [x] Registers & Modes
     - [x] Affixes (specialized Cs roots)
+    - [x] Personal reference roots
     - [x] Biases
     - [ ] Numbers
         - [x] Single numbers
