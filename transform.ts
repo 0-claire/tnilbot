@@ -2,10 +2,11 @@ import text2png from 'text2png';
 import { PRIMARY_CORES, PRIMARY_TOP_LEFT, PRIMARY_BOTTOM_RIGHT, PRIMARY_TOP_RIGHT, PRIMARY_BOTTOM_LEFT, DIACRITICS, TERTIARY_VALENCES, TERTIARY_ASPECTS_PHASES_EFFECTS, LEVELS, CASE_ILLOCUTION_VALIDATION, CASE_SCOPE, MOOD, REGISTER, BIASES } from './textConversionInformation.js';
 import config from './config.js'
 
-var lastChartype: 1|2|3|4|5|6|7|null = null;
+type CharType =  -1|1|2|3|4|5|6|7;
+var lastChartype: CharType | null = null;
 
-function getCharType(chr) {
-	var charType = -1;
+function getCharType(chr): CharType {
+	var charType: CharType = -1;
 	if(['stem', 'specification'].some(p => chr.hasOwnProperty(p)))
 		charType = 1;
 	if(chr.core)
