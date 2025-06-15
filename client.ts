@@ -27,11 +27,13 @@ const commands = [
 			),
 		exec: async function(interaction) {
 			const text = interaction.options.get('text')?.value
-			var result: AttachmentBuilder | null;
+			var result: AttachmentBuilder | string | null;
 			try {
 				// Parse text
 				var phrases = text.split(' ');
 				// const vowels = '[aeiouäëïöüáéíóúâêîôû']'
+				const modularAdjunctRegex = /^[aeiouäëïöüáéíóúâêîôû]+[hwy]?/;
+				const affixualAdjunctRegex = /^[aeiouäëïöüáéíóúâêîôû]+[^aeiouäëïöüáéíóúâêîôû]+[aeiouäëïöüáéíóúâêîôû]{0,2}/;
 				const regexA = /^h([nmň][aeiouäëïöüáéíóúâêîôû']{1,3}|([aeou]?i?|iu))/;
 				const regexB = /^ah[nmň][aeiouäëïöüáéíóúâêîôû']{1,3}x/;
 				// TODO: honestly why not just use the parser to determine if it's a suppletive or carrier
@@ -44,6 +46,7 @@ const commands = [
 
 					if(regexA.test(previousPhrase.toLowerCase()) ||
 					   regexB.test(previousPhrase.toLowerCase()) ||
+					   modularAdjunctRegex.test(previousPhrase.toLowerCase()) || // Don't separate aspect adjuncts & others
 					   regexC.test(previousPhrase.toLowerCase())
 					  ) {
 						console.log(`phrase ${currentPhrase} matches`);
@@ -58,16 +61,23 @@ const commands = [
 				result = new AttachmentBuilder(pngBuffer, { name: 'image.png' });
 				console.log("result:", result)
 			} catch(e) {
-				result = null;
-				console.log(e);
+					result = null;
+				if(e.name === 'PARSING_ERROR') {
+					result = `Parsing error: ${e.message}`;
+				} else {
+					console.log(e);
+				}
 			}
 			if(result) {
-				await interaction.reply({
-					content: `text: ||\`${ text || 'null'}\`||`,
-					files: [result]
-				});
+				if(typeof result === 'string')
+					await interaction.reply(result);
+				else
+					await interaction.reply({
+						// content: `text: ||\`${ text || 'null'}\`||`,
+						files: [result]
+					});
 			} else {
-				await interaction.reply("Could not render text");
+				await interaction.reply("Internal error");
 			}
 		}
 	}
