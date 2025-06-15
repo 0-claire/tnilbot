@@ -1,6 +1,6 @@
 import text2png from 'text2png';
 import { Result } from '@zsnout/ithkuil/script'
-import { PRIMARY_CORES, PRIMARY_TOP_LEFT, PRIMARY_BOTTOM_RIGHT, PRIMARY_TOP_RIGHT, PRIMARY_BOTTOM_LEFT, DIACRITICS, TERTIARY_VALENCES, TERTIARY_ASPECTS_PHASES_EFFECTS, LEVELS, CASE_ILLOCUTION_VALIDATION, CASE_SCOPE, MOOD, REGISTER, BIASES, THOUSANDS_DIACRITICS } from './textConversionInformation.js';
+import { PRIMARY_CORES, PRIMARY_TOP_LEFT, PRIMARY_BOTTOM_RIGHT, PRIMARY_TOP_RIGHT, PRIMARY_BOTTOM_LEFT, DIACRITICS, TERTIARY_VALENCES, TERTIARY_ASPECTS_PHASES_EFFECTS, LEVELS, CASE_ILLOCUTION_VALIDATION, CASE_SCOPE, MOOD, REGISTER, BIASES, } from './textConversionInformation.js';
 import config from './config.js'
 
 type CharType =  -1|1|2|3|4|5|6|7;
@@ -210,12 +210,12 @@ function fillDefaultsNumeral(char): string {
 	const str = char.value.toString();
 	var outtext = char.value.toString().at(-1); // 1's place is main char
 
-	if(str.length > 3 && str[0] !== '0') // thousands
-		outtext += `<${str[0]}`;
-	if(str.length > 2 && str[1] !== '0') // hundreds
-		outtext += `^${str[1]}`;
-	if(str.length > 1 && str[2] !== '0') // tens
-		outtext += `_${str[2]}`;
+	if(str.length > 3 && str.at(-4) !== '0') // thousands
+		outtext += `<${str.at(-4)}`;
+	if(str.length > 2 && str.at(-3) !== '0') // hundreds
+		outtext += `^${str.at(-3)}`;
+	if(str.length > 1 && str.at(-2) !== '0') // tens
+		outtext += `_${str.at(-2)}`;
 
 	return outtext;
 }

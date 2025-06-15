@@ -433,15 +433,3 @@ export const BIASES = {
   // ţ
   // f
 };         
-
-export const THOUSANDS_DIACRITICS = {
-	'1': '<ä',
-	'2': '<ò',
-	'3': '<i',
-	'4': '<ï',
-	'5': '⋮iäa',
-	'6': '⋮aäf', // best I could find for now
-	'7': '<o',
-	'8': '<ö',
-	'9': '<ó',
-};
