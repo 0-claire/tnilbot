@@ -13,11 +13,13 @@
     - [x] Affixes (specialized Cs roots)
     - [x] Personal reference roots
     - [x] Biases
-    - [ ] Numbers
+    - [x] Numbers
         - [x] Single numbers
-        - [ ] Compound numbers
+        - [x] Compound numbers
     - [ ] Tones in alphabetic writing
+    - [ ] Option for registers & suppletives continue until closed with hü
 - [ ] Render replied message
+- [ ] Support for punctuation marks, and ? silly reduplication (e.g. wuoltwaaaaaaa)
 - [ ] Edit rendered message
 - [ ] Quizzes
     - [ ] Cs chars/secondaries
@@ -42,6 +44,6 @@
 
 # Tasks
 - elide quaternaries by default
-- check numeric parsing (and if numeric roots need special handling; I suppose zsnout does this already if so)
+- check numeric root parsing and see if they need special handling
 - add intro to this README
 - add some copyleft foss copyright
