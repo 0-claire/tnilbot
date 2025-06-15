@@ -209,14 +209,9 @@ function fillDefaultsNumeral(char): string {
 	// process numerals by concatting their values and then converting to int
 	const str = char.value.toString();
 	var outtext = char.value.toString().at(-1); // 1's place is main char
-	console.log('str, outtext:', [str, outtext]);
 
 	if(str.length > 3 && str[0] !== '0') // thousands
-		if(str[0] === '5' || str[0] === '6')
-			// prefix where necessary
-			outtext = `${THOUSANDS_DIACRITICS[str[0]]} ${outtext}`;
-		else
-			outtext += `${THOUSANDS_DIACRITICS[str[0]]}`;
+		outtext += `<${str[0]}`;
 	if(str.length > 2 && str[1] !== '0') // hundreds
 		outtext += `^${str[1]}`;
 	if(str.length > 1 && str[2] !== '0') // tens
