@@ -56,6 +56,7 @@ function fillDefaultsPrimary(char) {
 function specialMarkersToCharacters(name) {
 	switch(name) {
 		case "CORE_GEMINATE": return "=";
+		case "EXTENSION_GEMINATE": return "≈";
 		case "STANDARD_PLACEHOLDER": return "}";
 		case "DOT": return "a";
 		case "HORIZ_BAR": return "ä";
@@ -174,13 +175,32 @@ function fillDefaultsRegisterMode(char) {
 
 function fillBiasChar(char) {
 	let bias = "Ʃ";
-	const ext = BIASES[char.bias]
+	let ext = BIASES[char.bias]
 	if(ext.dot === 'right')
 		bias += `${ext.prefix}>${specialMarkersToCharacters(DIACRITICS[ext.ext])}`;
 	else if(ext.dot === 'left')
 		bias += `${ext.prefix}<${specialMarkersToCharacters(DIACRITICS[ext.ext])}`;
-	else
-		bias += specialMarkersToCharacters(ext);
+	else {
+		let sub = "";
+		var newExt = ext;
+		if(/'/.test(newExt)) {
+			newExt = newExt.replace(/'/, '');
+			sub += "'";
+		} if(/_/.test(ext)) {
+			const prior = newExt;
+			newExt = newExt.replace(/_E/, 'E');
+			newExt = newExt.replace(/_C/, 'C');
+			if(prior !== newExt)
+				sub += "_";
+		} if(/\^/.test(newExt)) {
+			newExt = newExt.replace(/\^/, '');
+			sub += "^";
+		}
+		console.log('sub:', sub);
+		console.log('newExt:', newExt);
+		bias += sub
+		bias += specialMarkersToCharacters(newExt);
+	}
 	return bias;
 }
 
