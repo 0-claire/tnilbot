@@ -32,8 +32,9 @@ const commands = [
 				// Parse text
 				var phrases = text.split(' ');
 				// const vowels = '[aeiouäëïöüáéíóúâêîôû']'
-				const modularAdjunctRegex = /^[aeiouäëïöüáéíóúâêîôû]+[hwy]?/;
+				const modularAdjunctRegex = /^['wy]?[aeiouäëïöüáéíóúâêîôû]+(w|y|h[lrmnň]?w?)?/;
 				const affixualAdjunctRegex = /^[aeiouäëïöüáéíóúâêîôû]+[^aeiouäëïöüáéíóúâêîôû]+[aeiouäëïöüáéíóúâêîôû]{0,2}/;
+				const multipleAffixAdjunctRegex = /^ë?'?h[wrl]?/;
 				const regexA = /^h([nmň][aeiouäëïöüáéíóúâêîôû']{1,3}|([aeou]?i?|iu))/;
 				const regexB = /^ah[nmň][aeiouäëïöüáéíóúâêîôû']{1,3}x/;
 				// TODO: honestly why not just use the parser to determine if it's a suppletive or carrier
