@@ -3,3 +3,5 @@ discord-example-app/
 *.js
 node_modules/**
 config.ts
+.prettierrc
+.eslintrc
