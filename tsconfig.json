@@ -5,13 +5,11 @@
 	"compilerOptions": {
 		"skipLibCheck": true,
 		"target": "ES2020",
-		"module": "ESNext",
-		"esModuleInterop": true,
+		"module": "NodeNext",
 		"moduleResolution": "NodeNext",
+		"esModuleInterop": true,
 		"resolveJsonModule": true,
 		"types": ["node"],
-		"resolveJsonModule": true,
-		"module": "NodeNext",
 		"noImplicitAny": false,
 		"removeComments": true,
 		"preserveConstEnums": true,
@@ -25,5 +23,5 @@
 		"client.ts",
 		"tnil.ts",
 		"textConversionInformation.ts"
-	],
+	]
 }
