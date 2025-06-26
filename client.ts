@@ -3,6 +3,8 @@ import { textToScript } from '@zsnout/ithkuil/script/index.js'
 import { Result } from '@zsnout/ithkuil/script'
 import secrets from './secrets.json' with { type: 'json' }
 import drawCharsFromRaw from './transform.js'
+import { textToPng } from './transform.js'
+import { generateChar } from './generator.js'
 
 // TODO: move code into commands/ and into svg.ts(x) or tnil.ts(x)
 
@@ -92,10 +94,12 @@ const commands = [
 			.setName('secondary')
 			.setDescription('gives a random secondary character'),
 		exec: async function(interaction) {
-			const randomWord = generateText()
+			const wordLength = 5;
+			const randomChars = [...Array(wordLength).keys()].map(x => generateChar()).join('');
+			// const charsAsWords = randomChars.map(x => 'a' + x + 'al').join(' ');
 			var result: AttachmentBuilder | string | null;
 			try {
-				result = render(text);
+				result = await textToPng(randomChars);
 			} catch(e) {
 				result = null;
 				if(e.name === 'PARSING_ERROR')
@@ -108,6 +112,7 @@ const commands = [
 					await interaction.reply(result);
 				else
 					await interaction.reply({
+						content: `Transcript: ||${randomChars}||`,
 						files: [result]
 					});
 			} else {
