@@ -1,4 +1,4 @@
-import { Client, Events, GatewayIntentBits, REST, Routes, SlashCommandBuilder, AttachmentBuilder } from 'discord.js'
+import { Client, Events, GatewayIntentBits, REST, Routes, SlashCommandBuilder, AttachmentBuilder, SlashCommandOptionsOnlyBuilder, SlashCommandSubcommandsOnlyBuilder } from 'discord.js'
 import { textToScript } from '@zsnout/ithkuil/script/index.js'
 import { Result } from '@zsnout/ithkuil/script'
 import secrets from './secrets.json' with { type: 'json' }
@@ -52,6 +52,29 @@ async function render(text) {
 }
 
 // define slash command data
+function createSlashCommand(settings: {
+	name: string,
+	description: string,
+	// subcommands: SlashCommandSubcommandsOnlyBuilder[] | undefined,
+	// options: SlashCommandOptionsOnlyBuilder[] | undefined
+	}, callback: (builder: SlashCommandBuilder) => SlashCommandBuilder): SlashCommandBuilder {
+		// the slash command
+		const builder = new SlashCommandBuilder();
+
+		// Set options
+		builder.setName(settings.name);
+		builder.setDescription(settings.description);
+
+		// TODO: add any default options
+
+
+		// Allow mutations
+		const newBuilder = callback(builder);
+
+		// return the full slash command object
+		return newBuilder;
+}
+
 const commands = [
 	{ 
 		data: new SlashCommandBuilder()
@@ -62,9 +85,17 @@ const commands = [
 				.setName('text')
 				.setDescription("The text to render into the script")
 				.setRequired(true)
-			),
+			)
+			.addUserOption(option =>
+								 option.
+								 setName("mention")
+								 .setDescription("The user to mention (ping)")
+								 .setRequired(false)
+								 ),
 		exec: async function(interaction) {
 			const text = interaction.options.get('text')?.value
+			const user = interaction.options.get('mention')?.value
+			console.log('user option:', user);
 			var result: AttachmentBuilder | string | null;
 			try {
 				result = await render(text);
@@ -82,6 +113,7 @@ const commands = [
 				else
 					await interaction.reply({
 						// content: `text: ||\`${ text || 'null'}\`||`,
+						// TODO: mention
 						files: [result]
 					});
 			} else {
@@ -90,12 +122,22 @@ const commands = [
 		}
 	},
 	{
-		data: new SlashCommandBuilder()
-			.setName('secondary')
-			.setDescription('gives a random secondary character'),
+		data: createSlashCommand({ name: "secondary", description: "gives a random secondary character" }, builder => {
+			builder.addBooleanOption(option => 
+			  option
+				.setName("inverted")
+				.setDescription("mix in inverted chars")
+			 );
+			 return builder;
+		}),
 		exec: async function(interaction) {
+			const inverted = interaction.options.get('inverted')?.value
 			const wordLength = 5;
-			const randomChars = [...Array(wordLength).keys()].map(x => generateChar()).join('');
+			const randomChars = [...Array(wordLength).keys()].map(x => { 
+				const char = generateChar();
+				// if inverted is set to true, use a random number check to determine whether the char is inverted
+				return  inverted === true ? (Math.random() > 0.5 ? `${char}'` : char ) : char;
+			}).join('');
 			// const charsAsWords = randomChars.map(x => 'a' + x + 'al').join(' ');
 			var result: AttachmentBuilder | string | null;
 			try {
@@ -119,7 +161,122 @@ const commands = [
 				await interaction.reply("Internal error");
 			}
 		}
-	}
+	},
+	{
+		data: new SlashCommandBuilder()
+			.setName('extensions')
+			.setDescription('gives random secondary chars with extensions')
+			.addBooleanOption(option => 
+			  option
+				.setName("inverted")
+				.setDescription("mix in inverted chars")
+			 )
+			 ,
+		exec: async function(interaction) {
+			const wordLength = 5;
+			const inverted = interaction.options.get('inverted')?.value
+			const preChar = `${generateChar()}`;
+			const postChar = `${generateChar()}`;
+			const apostrophe = inverted === true ? `${Math.random() > 0.5 ? "'" : ''}` : '';
+			const secondaryChar = `${generateChar()}${apostrophe}`; 
+			const randomChars = `${secondaryChar}^${preChar}_${postChar}`;
+			const prettifiedChars = `${preChar}${secondaryChar}${postChar}`;
+			var result: AttachmentBuilder | string | null;
+			try {
+				result = await textToPng(randomChars);
+			} catch(e) {
+				result = null;
+				if(e.name === 'PARSING_ERROR')
+					result = `Parsing error: ${e.message}`;
+				else
+					console.log(e);
+			}
+			if(result) {
+				if(typeof result === 'string')
+					await interaction.reply(result);
+				else
+					await interaction.reply({
+						content: `Transcript: ||${prettifiedChars}||`,
+						files: [result]
+					});
+			} else {
+				await interaction.reply("Internal error");
+			}
+		}
+	},
+	// {
+		// data: createSlashCommand({ name: 'quiz', description: 'quiz on script chars'}, builder => {
+			// builder.addSubcommand(command =>
+				// command
+					// .setName("secondaries")
+					// .setDescription("Consonantal chars")
+					// .addBooleanOption(option => 
+					  // option
+						// .setName("inversions")
+						// .setDescription("Mix in inverted chars")
+					 // )
+					// .addBooleanOption(option => 
+					  // option
+						// .setName("extensions")
+						// .setDescription("Mix in char extensions")
+					 // )
+			// .addNumberOption(option =>
+				// option
+					// .setName("group size")
+					// .setDescription("Number of chars (not including extensions) in each question")
+			// )
+			// .addNumberOption(option =>
+				// option
+					// .setName("length")
+					// .setDescription("Number of questions to be given")
+			// )
+			// .addNumberOption(option =>
+				// option
+					// .setName("time")
+					// .setDescription("Number of seconds to answer each question")
+			// )
+			// )
+			// return builder;
+		// }),
+		// exec: async function(interaction) {
+			// const subcommand = interaction.options.get('_subcommand')?.value 
+			// switch(subcommand) {
+				// case "secondaries":  {
+					// const inverted = interaction.options.get('inverted')?.value
+					// const wordLength = interaction.options.get('inverted')?.value || 5;
+					// const randomChars = [...Array(wordLength).keys()].map(x => { 
+						// const char = generateChar();
+						// // if inverted is set to true, use a random number check to determine whether the char is inverted
+						// return  inverted === true ? (Math.random() > 0.5 ? `${char}'` : char ) : char;
+					// }).join('');
+					// // const charsAsWords = randomChars.map(x => 'a' + x + 'al').join(' ');
+					// var result: AttachmentBuilder | string | null;
+					// try {
+						// result = await textToPng(randomChars);
+					// } catch(e) {
+						// result = null;
+						// if(e.name === 'PARSING_ERROR')
+							// result = `Parsing error: ${e.message}`;
+						// else
+							// console.log(e);
+					// }
+					// if(result) {
+						// if(typeof result === 'string')
+							// await interaction.reply(result);
+						// else
+							// await interaction.reply({
+								// content: `Transcript: ||${randomChars}||`,
+								// files: [result]
+							// });
+					// } else {
+						// await interaction.reply("Internal error");
+					// }
+						// return subcommand;
+				// };
+			// }
+			// await interaction.reply("options: " + JSON.stringify(interaction.options));
+		// }
+	// },
 ]
 
 
