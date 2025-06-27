@@ -207,79 +207,96 @@ const commands = [
 			}
 		}
 	},
-	// {
-		// data: createSlashCommand({ name: 'quiz', description: 'quiz on script chars'}, builder => {
-			// builder.addSubcommand(command =>
-				// command
-					// .setName("secondaries")
-					// .setDescription("Consonantal chars")
-					// .addBooleanOption(option => 
-					  // option
-						// .setName("inversions")
-						// .setDescription("Mix in inverted chars")
-					 // )
-					// .addBooleanOption(option => 
-					  // option
-						// .setName("extensions")
-						// .setDescription("Mix in char extensions")
-					 // )
-			// .addNumberOption(option =>
-				// option
-					// .setName("group size")
-					// .setDescription("Number of chars (not including extensions) in each question")
-			// )
-			// .addNumberOption(option =>
-				// option
-					// .setName("length")
-					// .setDescription("Number of questions to be given")
-			// )
-			// .addNumberOption(option =>
-				// option
-					// .setName("time")
-					// .setDescription("Number of seconds to answer each question")
-			// )
-			// )
-			// return builder;
-		// }),
-		// exec: async function(interaction) {
+	{
+		data: createSlashCommand({ name: 'quiz', description: 'quiz on script chars'}, builder => {
+			builder.addSubcommand(command =>
+				command
+					.setName("secondaries")
+					.setDescription("Consonantal chars")
+					.addBooleanOption(option => 
+					  option
+						.setName("inversions")
+						.setDescription("Mix in inverted chars")
+					 )
+					.addBooleanOption(option => 
+					  option
+						.setName("extensions")
+						.setDescription("Mix in char extensions")
+					 )
+			.addNumberOption(option =>
+				option
+					.setName("group_size")
+					.setDescription("Number of chars (not including extensions) in each question")
+			)
+			.addNumberOption(option =>
+				option
+					.setName("length")
+					.setDescription("Number of questions to be given")
+			)
+			.addNumberOption(option =>
+				option
+					.setName("time")
+					.setDescription("Number of seconds to answer each question")
+			)
+			.addBooleanOption(option =>
+				option
+					.setName("collaborative")
+					.setDescription("Allow others to join in")
+			)
+			)
+			return builder;
+		}),
+		exec: async function(interaction) {
 			// const subcommand = interaction.options.get('_subcommand')?.value 
-			// switch(subcommand) {
-				// case "secondaries":  {
-					// const inverted = interaction.options.get('inverted')?.value
-					// const wordLength = interaction.options.get('inverted')?.value || 5;
-					// const randomChars = [...Array(wordLength).keys()].map(x => { 
-						// const char = generateChar();
-						// // if inverted is set to true, use a random number check to determine whether the char is inverted
-						// return  inverted === true ? (Math.random() > 0.5 ? `${char}'` : char ) : char;
-					// }).join('');
-					// // const charsAsWords = randomChars.map(x => 'a' + x + 'al').join(' ');
-					// var result: AttachmentBuilder | string | null;
-					// try {
-						// result = await textToPng(randomChars);
-					// } catch(e) {
-						// result = null;
-						// if(e.name === 'PARSING_ERROR')
-							// result = `Parsing error: ${e.message}`;
-						// else
-							// console.log(e);
-					// }
-					// if(result) {
-						// if(typeof result === 'string')
-							// await interaction.reply(result);
-						// else
-							// await interaction.reply({
-								// content: `Transcript: ||${randomChars}||`,
-								// files: [result]
-							// });
-					// } else {
-						// await interaction.reply("Internal error");
-					// }
-						// return subcommand;
-				// };
-			// }
-			// await interaction.reply("options: " + JSON.stringify(interaction.options));
-		// }
-	// },
+			// TODO: there's probably a better way to do this
+			const subcommand = interaction.options['_subcommand'];
+			switch(subcommand) {
+				case "secondaries":  {
+					const inverted = interaction.options.get('inverted')?.value || true;
+					const wordLength = interaction.options.get('group_size')?.value || 5;
+					const collaborative = interaction.options.get('collaborative')?.value || 5;
+					let quizLength = interaction.options.get('length')?.value || 5;
+					if(quizLength > 50) quizLength = 50;
+					await interaction.reply("Quiz started");
+
+					for(let i = 1; i <= quizLength; i++) {
+					}
+
+					const randomChars = [...Array(wordLength).keys()].map(x => { 
+						const char = generateChar();
+						// if inverted is set to true, use a random number check to determine whether the char is inverted
+						return  inverted === true ? (Math.random() > 0.5 ? `${char}'` : char ) : char;
+					}).join('');
+					// const charsAsWords = randomChars.map(x => 'a' + x + 'al').join(' ');
+					var result: AttachmentBuilder | string | null;
+					try {
+						result = await textToPng(randomChars);
+					} catch(e) {
+						result = null;
+						if(e.name === 'PARSING_ERROR')
+							result = `Parsing error: ${e.message}`;
+						else
+							console.log(e);
+					}
+					if(result) {
+						if(typeof result === 'string')
+							await interaction.reply(result);
+						else
+							await interaction.reply({
+								content: `Transcript: ||${randomChars}||`,
+								files: [result]
+							});
+					} else {
+						await interaction.reply("Internal error");
+					}
+						return subcommand;
+				};
+				default: {
+					await interaction.reply("This is not a valid subcommand");
+				};
+			}
+		}
+	},
 ]
 
 
