@@ -113,7 +113,7 @@ const commands = [
 				else
 					await interaction.reply({
 						// content: `text: ||\`${ text || 'null'}\`||`,
-						// TODO: mention
+						content: user ? `<@${user}>` : undefined,
 						files: [result]
 					});
 			} else {
@@ -175,12 +175,15 @@ const commands = [
 		exec: async function(interaction) {
 			const wordLength = 5;
 			const inverted = interaction.options.get('inverted')?.value
-			const preChar = `${generateChar()}`;
-			const postChar = `${generateChar()}`;
+			const secondaryChar = generateChar();
+			let preChar = generateChar();
+			if(preChar === secondaryChar) preChar = '=';
+			let postChar = generateChar();
+			if(postChar === secondaryChar) postChar = '=';
 			const apostrophe = inverted === true ? `${Math.random() > 0.5 ? "'" : ''}` : '';
-			const secondaryChar = `${generateChar()}${apostrophe}`; 
-			const randomChars = `${secondaryChar}^${preChar}_${postChar}`;
-			const prettifiedChars = `${preChar}${secondaryChar}${postChar}`;
+			const secondaryCharWithRotation = `${secondaryChar}${apostrophe}`; 
+			const randomChars = `${secondaryCharWithRotation}^${preChar}_${postChar}`;
+			const prettifiedChars = `${preChar}${secondaryCharWithRotation}${postChar}`;
 			var result: AttachmentBuilder | string | null;
 			try {
 				result = await textToPng(randomChars);
