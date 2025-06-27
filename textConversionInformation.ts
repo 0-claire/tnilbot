@@ -113,15 +113,15 @@ export const TERTIARY_VALENCES = {
 };
 
 export const TERTIARY_ASPECTS_PHASES_EFFECTS = {
-    "1/BEN": "⋮aia",
-    "2/BEN": "⋮sia",
-    "3/BEN": "⋮ais",
-    "SLF/BEN": "⋮sis",
+    "1:BEN": "⋮aia",
+    "2:BEN": "⋮sia",
+    "3:BEN": "⋮ais",
+    "SLF:BEN": "⋮sis",
     "UNKNOWN": "⋮zia",
-    "SLF/DET": "⋮aiz",
-    "3/DET": "⋮sim",
-    "2/DET": "⋮mia",
-    "1/DET": "⋮aim",
+    "SLF:DET": "⋮aiz",
+    "3:DET": "⋮sim",
+    "2:DET": "⋮mia",
+    "1:DET": "⋮aim",
 
     "PCT": "⋮aïa",
     "ITR": "⋮sïa",

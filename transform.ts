@@ -1,36 +1,32 @@
 import text2png from 'text2png';
-import { PRIMARY_CORES, PRIMARY_TOP_LEFT, PRIMARY_BOTTOM_RIGHT, PRIMARY_TOP_RIGHT, PRIMARY_BOTTOM_LEFT, DIACRITICS, TERTIARY_VALENCES, TERTIARY_ASPECTS_PHASES_EFFECTS, LEVELS, CASE_ILLOCUTION_VALIDATION, CASE_SCOPE, MOOD, REGISTER, BIASES } from './textConversionInformation.js';
+import { Result } from '@zsnout/ithkuil/script'
+import { PRIMARY_CORES, PRIMARY_TOP_LEFT, PRIMARY_BOTTOM_RIGHT, PRIMARY_TOP_RIGHT, PRIMARY_BOTTOM_LEFT, DIACRITICS, TERTIARY_VALENCES, TERTIARY_ASPECTS_PHASES_EFFECTS, LEVELS, CASE_ILLOCUTION_VALIDATION, CASE_SCOPE, MOOD, REGISTER, BIASES, } from './textConversionInformation.js';
 import config from './config.js'
 
 type CharType =  -1|1|2|3|4|5|6|7;
-var lastChartype: CharType | null = null;
 
 function getCharType(chr): CharType {
-	var charType: CharType;
 
 	if(['stem', 'specification', 'context'].some(p => chr.hasOwnProperty(p)))
-		charType = 1;
+		return 1;
 	else if(chr.core)
-		charType = 2;
+		return 2;
 	else if(typeof chr.value === 'string')
-		charType = 4;
+		return 4;
 	else if(['absoluteLevel', 'valence', 'relativeLevel'].some(p => chr.hasOwnProperty(p)))
-		charType = 3;
+		return 3;
 	else if(chr.bias) // bias
-		charType = 5;
+		return 5;
 	else if(chr.mode) // register (type) x mode (mode)
-		charType = 6;
+		return 6;
 	else if(typeof chr.value === 'number')
-		charType = 7; // numerals
+		return 7; // numerals
 	else
-		charType = -1; // otherwise this is a break character here
-
-	lastChartype = charType;
-	return charType;
+		return -1; // otherwise this is a break character here
 }
 
 function fillDefaultsPrimary(char) {
-	var core = PRIMARY_CORES[char.specification || "BSC"];
+	let core = PRIMARY_CORES[char.specification || "BSC"];
 	const topLeft = PRIMARY_TOP_LEFT[char.perspective || "M"][char.extension || "DEL"];
 	const bottomRight = PRIMARY_BOTTOM_RIGHT[char.function || "STA"][char.version || "PRC"][char.configuration?.startsWith("D") ? "D" : "M"][char.stem ?? 1];
 	const topRight = PRIMARY_TOP_RIGHT[char.essence || "NRM"][char.affiliation || "CSL"];
@@ -60,6 +56,7 @@ function fillDefaultsPrimary(char) {
 function specialMarkersToCharacters(name) {
 	switch(name) {
 		case "CORE_GEMINATE": return "=";
+		case "EXTENSION_GEMINATE": return "≈";
 		case "STANDARD_PLACEHOLDER": return "}";
 		case "DOT": return "a";
 		case "HORIZ_BAR": return "ä";
@@ -79,7 +76,7 @@ function specialMarkersToCharacters(name) {
 }
 
 function fillDefaultsSecondary(char) {
-	var core = specialMarkersToCharacters(char.core || "STANDARD_PLACEHOLDER");
+	let core = specialMarkersToCharacters(char.core || "STANDARD_PLACEHOLDER");
 	if(char.rotated)
 		core += "'";
 	if(char.top)
@@ -94,7 +91,8 @@ function fillDefaultsSecondary(char) {
 		core += `_${specialMarkersToCharacters(char.underposed)}`;
 	}
 	if(char.right)
-		core += `>${specialMarkersToCharacters(char.right)}`;
+		core += `>>${specialMarkersToCharacters(char.right)}`;
+	// TODO: move this further right with chars like k
 	if(char.left)
 		core += `<${specialMarkersToCharacters(char.left)}`;
 	return core;
@@ -102,14 +100,14 @@ function fillDefaultsSecondary(char) {
 
 function fillDefaultsTertiary(char) {
 	// contents: valence, aspect, level, phase, effect
-	var valence = "";
-	if(char.top)
-		valence += `${TERTIARY_ASPECTS_PHASES_EFFECTS[char.top]}`;
+	let valence = "";
 	valence += TERTIARY_VALENCES[char.valence || "MNO"];
+	if(char.top)
+		valence += `^${TERTIARY_ASPECTS_PHASES_EFFECTS[char.top]}`;
 	if(char.bottom)
 		valence += `_${TERTIARY_ASPECTS_PHASES_EFFECTS[char.bottom]}`;
 	if(char.superposed) {
-		valence += `^${specialMarkersToCharacters(char.superposed)}`;
+		valence += `^^${specialMarkersToCharacters(char.superposed)}`;
 	}
 	if(char.underposed) {
 		if(char.bottom)
@@ -127,7 +125,7 @@ function fillDefaultsTertiary(char) {
 
 function fillDefaultsQuaternary(char) {
 	// contents: case, illocution, validation, mood
-	var bar = "|";
+	let bar = "|";
 	if(char.value) {
 		const ext = CASE_ILLOCUTION_VALIDATION[char.value];
 		if(typeof ext === 'string') {
@@ -163,7 +161,7 @@ function fillDefaultsQuaternary(char) {
 	// Never elide referential quaternaries, and don't elide Cs root or personal reference root quaternaries with non-OBS validation or non-THM case as they can't be shown with diacritics
 	// this check doesn't elide quats for Cr root formatives with default values besides case or ill+val
 	// TODO: we may need a more robus processor that can identify formatives and elide chars from them and apply the information as diacritics to previous chars, unless zsnout allows for such through a parameter
-	if((char.value === "OBS" || char.value === 'THM') && char.mood === undefined && char.caseScope === undefined)
+	if((char.value === "OBS" || char.value === 'THM') && char.mood === undefined && char.caseScope === undefined && !char.isSlotVIIAffix)
 		return "";
 	// if(char.mood === undefined && char.caseScope === undefined && !char.belongsToReferential && !char.belongsToCsFormative)
 		// return "";
@@ -176,30 +174,57 @@ function fillDefaultsRegisterMode(char) {
 }
 
 function fillBiasChar(char) {
-	var bias = "Ʃ";
-	var ext = BIASES[char.bias]
+	let bias = "Ʃ";
+	let ext = BIASES[char.bias]
 	if(ext.dot === 'right')
 		bias += `${ext.prefix}>${specialMarkersToCharacters(DIACRITICS[ext.ext])}`;
 	else if(ext.dot === 'left')
 		bias += `${ext.prefix}<${specialMarkersToCharacters(DIACRITICS[ext.ext])}`;
-	else
-		bias += specialMarkersToCharacters(ext);
+	else {
+		let sub = "";
+		var newExt = ext;
+		if(/'/.test(newExt)) {
+			newExt = newExt.replace(/'/, '');
+			sub += "'";
+		} if(/_/.test(ext)) {
+			const prior = newExt;
+			newExt = newExt.replace(/_E/, 'E');
+			newExt = newExt.replace(/_C/, 'C');
+			if(prior !== newExt)
+				sub += "_";
+		} if(/\^/.test(newExt)) {
+			newExt = newExt.replace(/\^/, '');
+			sub += "^";
+		}
+		console.log('sub:', sub);
+		console.log('newExt:', newExt);
+		bias += sub
+		bias += specialMarkersToCharacters(newExt);
+	}
 	return bias;
 }
 
 
 function fillDefaultsNumeral(char): string {
 	// process numerals by concatting their values and then converting to int
-	return `${char.value}`;
+	const str = char.value.toString();
+	var outtext = char.value.toString().at(-1); // 1's place is main char
+
+	if(str.length > 3 && str.at(-4) !== '0') // thousands
+		outtext += `<${str.at(-4)}`;
+	if(str.length > 2 && str.at(-3) !== '0') // hundreds
+		outtext += `^${str.at(-3)}`;
+	if(str.length > 1 && str.at(-2) !== '0') // tens
+		outtext += `_${str.at(-2)}`;
+
+	return outtext;
 }
 
-function rawInputToIthkuilFormattedString(rawIn) {
+function parserObjectToFontCompatibleString(rawIn) {
 	console.log('rawIn:', rawIn);
-	if(!rawIn.ok)
-		return "";
 	// TODO: throw and catch error, informing user
-	var outstr = "";
-	rawIn.value.forEach((chr) => {
+	let outstr = "";
+	rawIn.forEach((chr) => {
 		const charType = getCharType(chr);
 		console.log(`processing char of type ${charType}:`, chr);
 		switch(charType) {
@@ -231,14 +256,49 @@ function rawInputToIthkuilFormattedString(rawIn) {
 	});
 	return outstr;
 }
-function drawCharsFromRaw(rawInput) {
-	var rawInputAsString = rawInputToIthkuilFormattedString(rawInput);
-	console.log('Rendering text:', rawInputAsString);
-	var pngBytes = text2png(rawInputAsString, {
+
+
+function parserObjToFontChars() {
+}
+
+
+async function drawCharsFromRaw(parserObjects: Array<Result<any>>, options: object = {}) {
+	// console.log('parserObject:', parserObject);
+	
+	const inputWordsAsParserObjects: Array<Array<Result<any>>> = [];
+
+	for(let object of parserObjects) {
+		object = await object
+		console.log('object:', object);
+		if(object.ok === false) {
+			const err = new Error(object.reason);
+			err.name = "PARSING_ERROR";
+			throw err
+		} else {
+			inputWordsAsParserObjects.push(object.value);
+		}
+	}
+
+	let fontCompatibleString = '';
+
+	for(const wordObject of inputWordsAsParserObjects) {
+		if(fontCompatibleString.length > 0 && fontCompatibleString.at(-1) !== ' ')
+			fontCompatibleString += ' ';
+		fontCompatibleString += parserObjectToFontCompatibleString(wordObject);
+	}
+
+	console.log('Rendering text:', fontCompatibleString);
+	return textToPng(fontCompatibleString);
+}
+
+export function textToPng(fontCompatibleString: string) {
+	const fixed = fontCompatibleString.replace(/[ḑ]/g, 'ḍ') // replace d comma generated by the parser with d dot rendered by the font
+	const pngBytes = text2png(fixed, {
 		font: config.font,
 		localFontPath: config.localFontPath,
 		localFontName: config.localFontName,
-		color: 'white'
+		color: 'white',
+		letterSpacing: -200,
 	});
 	return pngBytes;
 }
