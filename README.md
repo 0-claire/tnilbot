@@ -16,14 +16,16 @@
     - [x] Numbers
         - [x] Single numbers
         - [x] Compound numbers
+    - [ ] Remove spacing features. Use spacing only for sentences
     - [ ] Tones in alphabetic writing
     - [ ] Option for registers & suppletives continue until closed with hü
 - [ ] Render replied message
 - [ ] Support for punctuation marks, and ? silly reduplication (e.g. wuoltwaaaaaaa)
 - [ ] Edit rendered message
 - [ ] Quizzes
-    - [ ] Cs chars/secondaries
-    - [ ] Cs/secondary extensions
+    - [x] Cs chars/secondaries
+    - [x] Cs/secondary extensions
+    - [ ] Set inversion enabled by default
     - [ ] Primary chars & diacritics
 - [ ] word builder
 - [ ] Support for elision settings
