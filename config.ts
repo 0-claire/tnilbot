@@ -1,8 +1,20 @@
 const config = {
-	font: '100px IthkuilBasic',
-	localFontPath: "/home/tortus/Downloads/IthkuilBasic.ttf",
-	// localFontPath: "/mnt/Storage/Downloads/media/IthkuilBasic.ttf",
-	localFontName: "Ithkuil Basic",
+	fonts: {
+		basic: {
+			font: '100px IthkuilBasic',
+			path: './IthkuilBasic.ttf',
+			name: 'Ithkuil Basic',
+		},
+		flow: {
+			font: '100px IthkuilFlow',
+			path: './IthkuilFlow.ttf',
+			name: 'Ithkuil Flow',
+		},
+	},
+	// Quizzes
+	quizzes: {
+		numberTries: 5,
+	},
 };
 
 export default config

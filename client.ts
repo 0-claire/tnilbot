@@ -15,7 +15,7 @@ client.on(Events.ClientReady, readyClient => {
 	console.log(`Logged in as ${readyClient.user.tag}!`);
 });
 
-async function render(text) {
+async function render(text, font) {
 	// Parse text
 	var phrases = text.split(' ');
 	// const vowels = '[aeiouäëïöüáéíóúâêîôû']'
@@ -45,7 +45,7 @@ async function render(text) {
 	console.log('phrases:', phrases);
 	const parserObjects: Result<any>[] = phrases.map(async x => await textToScript(x));
 	// Convert to script-compatible text and then to png
-	const pngBuffer = await drawCharsFromRaw(parserObjects);
+	const pngBuffer = await drawCharsFromRaw(parserObjects, font);
 	var result = new AttachmentBuilder(pngBuffer, { name: 'image.png' });
 	console.log("result:", result)
 	return result
@@ -91,14 +91,24 @@ const commands = [
 								 setName("mention")
 								 .setDescription("The user to mention (ping)")
 								 .setRequired(false)
-								 ),
+								 )
+			.addStringOption(option => 
+			  option
+				.setName("font")
+				.setDescription("which font should I use")
+				.addChoices(
+					{ name: "calligraphic", value: "basic" },
+					{ name: "handwritten", value: "flow" }
+				)
+			),
 		exec: async function(interaction) {
 			const text = interaction.options.get('text')?.value
 			const user = interaction.options.get('mention')?.value
+			const font = interaction.options.get('inverted')?.value;
 			console.log('user option:', user);
 			var result: AttachmentBuilder | string | null;
 			try {
-				result = await render(text);
+				result = await render(text, font);
 			} catch(e) {
 					result = null;
 				if(e.name === 'PARSING_ERROR') {
@@ -127,11 +137,21 @@ const commands = [
 			  option
 				.setName("inverted")
 				.setDescription("mix in inverted chars")
+			)
+			builder.addStringOption(option => 
+			  option
+				.setName("font")
+				.setDescription("which font should I use")
+				.addChoices(
+					{ name: "calligraphic", value: "basic" },
+					{ name: "handwritten", value: "flow" }
+				)
 			 );
 			 return builder;
 		}),
 		exec: async function(interaction) {
-			const inverted = interaction.options.get('inverted')?.value
+			const inverted = interaction.options.get('inverted')?.value;
+			const font = interaction.options.get('inverted')?.value;
 			const wordLength = 5;
 			const randomChars = [...Array(wordLength).keys()].map(x => { 
 				const char = generateChar();
@@ -141,7 +161,7 @@ const commands = [
 			// const charsAsWords = randomChars.map(x => 'a' + x + 'al').join(' ');
 			var result: AttachmentBuilder | string | null;
 			try {
-				result = await textToPng(randomChars);
+				result = await textToPng(randomChars, font);
 			} catch(e) {
 				result = null;
 				if(e.name === 'PARSING_ERROR')
@@ -175,10 +195,11 @@ const commands = [
 		exec: async function(interaction) {
 			const wordLength = 5;
 			const inverted = interaction.options.get('inverted')?.value
+			const font = interaction.options.get('inverted')?.value;
 			const secondaryChar = generateChar();
-			let preChar = generateChar();
+			let preChar = generateChar(true);
 			if(preChar === secondaryChar) preChar = '=';
-			let postChar = generateChar();
+			let postChar = generateChar(true);
 			if(postChar === secondaryChar) postChar = '=';
 			const apostrophe = inverted === true ? `${Math.random() > 0.5 ? "'" : ''}` : '';
 			const secondaryCharWithRotation = `${secondaryChar}${apostrophe}`; 
@@ -186,7 +207,7 @@ const commands = [
 			const prettifiedChars = `${preChar}${secondaryCharWithRotation}${postChar}`;
 			var result: AttachmentBuilder | string | null;
 			try {
-				result = await textToPng(randomChars);
+				result = await textToPng(randomChars, font);
 			} catch(e) {
 				result = null;
 				if(e.name === 'PARSING_ERROR')
@@ -253,6 +274,7 @@ const commands = [
 			switch(subcommand) {
 				case "secondaries":  {
 					const inverted = interaction.options.get('inverted')?.value || true;
+					const font = interaction.options.get('inverted')?.value;
 					const wordLength = interaction.options.get('group_size')?.value || 5;
 					const collaborative = interaction.options.get('collaborative')?.value || 5;
 					let quizLength = interaction.options.get('length')?.value || 5;
@@ -270,7 +292,7 @@ const commands = [
 					// const charsAsWords = randomChars.map(x => 'a' + x + 'al').join(' ');
 					var result: AttachmentBuilder | string | null;
 					try {
-						result = await textToPng(randomChars);
+						result = await textToPng(randomChars, font);
 					} catch(e) {
 						result = null;
 						if(e.name === 'PARSING_ERROR')

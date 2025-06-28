@@ -25,6 +25,7 @@
 - [ ] Quizzes
     - [x] Cs chars/secondaries
     - [x] Cs/secondary extensions
+    - [ ] Handwritten font option
     - [ ] Set inversion enabled by default
     - [ ] Primary chars & diacritics
 - [ ] word builder
