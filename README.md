@@ -20,14 +20,18 @@
     - [ ] Tones in alphabetic writing
     - [ ] Option for registers & suppletives continue until closed with hü
 - [ ] Render replied message
+- [ ] Edit rendered mesage (? with edited marker)
+- [ ] Delete rendered message ?
 - [ ] Support for punctuation marks, and ? silly reduplication (e.g. wuoltwaaaaaaa)
 - [ ] Edit rendered message
 - [ ] Quizzes
     - [x] Cs chars/secondaries
     - [x] Cs/secondary extensions
-    - [ ] Handwritten font option
-    - [ ] Set inversion enabled by default
+    - [x] Handwritten font option
+    - [x] Set inversion enabled by default
     - [ ] Primary chars & diacritics
+    - [ ] Interactive quizzes
+- [ ] Render arbitrary text in the font
 - [ ] word builder
 - [ ] Support for elision settings
 - [ ] Potential per-channel "always render my/all messages" setting

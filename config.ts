@@ -11,9 +11,15 @@ const config = {
 			name: 'Ithkuil Flow',
 		},
 	},
+
+	rendering: {
+		spaceBetweenWords: false, // spaces between words feature is in beta
+	},
+
 	// Quizzes
 	quizzes: {
 		numberTries: 5,
+		inversionByDefault: true,
 	},
 };
 

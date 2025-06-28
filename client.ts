@@ -1,10 +1,11 @@
-import { Client, Events, GatewayIntentBits, REST, Routes, SlashCommandBuilder, AttachmentBuilder, SlashCommandOptionsOnlyBuilder, SlashCommandSubcommandsOnlyBuilder } from 'discord.js'
+import { Client, Events, GatewayIntentBits, REST, Routes, SlashCommandBuilder, AttachmentBuilder, SlashCommandOptionsOnlyBuilder, SlashCommandSubcommandsOnlyBuilder, ContextMenuCommandBuilder, ApplicationCommandType } from 'discord.js'
 import { textToScript } from '@zsnout/ithkuil/script/index.js'
 import { Result } from '@zsnout/ithkuil/script'
 import secrets from './secrets.json' with { type: 'json' }
 import drawCharsFromRaw from './transform.js'
 import { textToPng } from './transform.js'
 import { generateChar } from './generator.js'
+import config from './config.js'
 
 // TODO: move code into commands/ and into svg.ts(x) or tnil.ts(x)
 
@@ -100,11 +101,17 @@ const commands = [
 					{ name: "calligraphic", value: "basic" },
 					{ name: "handwritten", value: "flow" }
 				)
-			),
+			)
+			// .addMentionableOption(option => 
+				// option
+				// .setName("reply")
+				// .setDescription("Message to reply to")
+			// )
+			,
 		exec: async function(interaction) {
 			const text = interaction.options.get('text')?.value
 			const user = interaction.options.get('mention')?.value
-			const font = interaction.options.get('inverted')?.value;
+			const font = interaction.options.get('font')?.value;
 			console.log('user option:', user);
 			var result: AttachmentBuilder | string | null;
 			try {
@@ -151,12 +158,15 @@ const commands = [
 		}),
 		exec: async function(interaction) {
 			const inverted = interaction.options.get('inverted')?.value;
-			const font = interaction.options.get('inverted')?.value;
+			const font = interaction.options.get('font')?.value;
 			const wordLength = 5;
 			const randomChars = [...Array(wordLength).keys()].map(x => { 
 				const char = generateChar();
 				// if inverted is set to true, use a random number check to determine whether the char is inverted
-				return  inverted === true ? (Math.random() > 0.5 ? `${char}'` : char ) : char;
+				if(inverted === true || (config.quizzes.inversionByDefault === true && inverted !== false))
+					return Math.random() > 0.5 ? `${char}'` : char;
+				else
+					return char;
 			}).join('');
 			// const charsAsWords = randomChars.map(x => 'a' + x + 'al').join(' ');
 			var result: AttachmentBuilder | string | null;
@@ -191,17 +201,28 @@ const commands = [
 				.setName("inverted")
 				.setDescription("mix in inverted chars")
 			 )
+			.addStringOption(option => 
+			  option
+				.setName("font")
+				.setDescription("which font should I use")
+				.addChoices(
+					{ name: "calligraphic", value: "basic" },
+					{ name: "handwritten", value: "flow" }
+				)
+			)
 			 ,
 		exec: async function(interaction) {
 			const wordLength = 5;
 			const inverted = interaction.options.get('inverted')?.value
-			const font = interaction.options.get('inverted')?.value;
+			const font = interaction.options.get('font')?.value;
 			const secondaryChar = generateChar();
 			let preChar = generateChar(true);
 			if(preChar === secondaryChar) preChar = '=';
 			let postChar = generateChar(true);
 			if(postChar === secondaryChar) postChar = '=';
-			const apostrophe = inverted === true ? `${Math.random() > 0.5 ? "'" : ''}` : '';
+			var apostrophe = '';
+			if(inverted === true || (config.quizzes.inversionByDefault === true && inverted !== false))
+				apostrophe += `${Math.random() > 0.5 ? "'" : ''}`;
 			const secondaryCharWithRotation = `${secondaryChar}${apostrophe}`; 
 			const randomChars = `${secondaryCharWithRotation}^${preChar}_${postChar}`;
 			const prettifiedChars = `${preChar}${secondaryCharWithRotation}${postChar}`;
@@ -264,6 +285,15 @@ const commands = [
 					.setName("collaborative")
 					.setDescription("Allow others to join in")
 			)
+			.addStringOption(option => 
+			  option
+				.setName("font")
+				.setDescription("which font should I use")
+				.addChoices(
+					{ name: "calligraphic", value: "basic" },
+					{ name: "handwritten", value: "flow" }
+				)
+			)
 			)
 			return builder;
 		}),
@@ -274,7 +304,7 @@ const commands = [
 			switch(subcommand) {
 				case "secondaries":  {
 					const inverted = interaction.options.get('inverted')?.value || true;
-					const font = interaction.options.get('inverted')?.value;
+					const font = interaction.options.get('font')?.value;
 					const wordLength = interaction.options.get('group_size')?.value || 5;
 					const collaborative = interaction.options.get('collaborative')?.value || 5;
 					let quizLength = interaction.options.get('length')?.value || 5;
@@ -321,19 +351,35 @@ const commands = [
 	},
 ]
 
+const contextMenuCommands = [
+	{
+		comm: new ContextMenuCommandBuilder()
+			.setName("Render a reply")
+			.setType(ApplicationCommandType.Message),
+	},
+];
 
-// Run slash command function on its receipt
+
+// Listen for interactions
 client.on(Events.InteractionCreate, async interaction => {
-	if (!interaction.isChatInputCommand()) return;
 
-	const comm = commands.find(c => c.data.name === interaction.commandName);
-	if(comm) {
-		try {
-			await comm.exec(interaction)
-		} catch(e) {
-			console.log('error! =>', e)
-			await interaction.reply("An error occurred running this command. It has been logged")
+	// Run slash command function on its receipt
+	if (interaction.isChatInputCommand()) {
+		const comm = commands.find(c => c.data.name === interaction.commandName);
+		if(comm) {
+			try {
+				await comm.exec(interaction)
+			} catch(e) {
+				console.log('error! =>', e)
+				await interaction.reply("An error occurred running this command. It has been logged")
+			}
 		}
+	} else if(interaction.isMessageContextMenuCommand()) {
+		  const message = interaction.targetMessage; // This is the message that was right-clicked
+		  // TODO: grab options input
+		  // render a response
+	} else {
+		return
 	}
 });
 
