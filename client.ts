@@ -362,6 +362,7 @@ const commands = [
 			switch(subcommand) {
 				case "affixes":  {
 					const inverted = interaction.options.get('inverted')?.value || true;
+					const extensions = interaction.options.get('extensions')?.value || true;
 					const time = interaction.options.get('time')?.value;
 					const font = interaction.options.get('font')?.value;
 					const wordLength = interaction.options.get('group_size')?.value || 3;
@@ -370,7 +371,7 @@ const commands = [
 					if(quizLength > 50) quizLength = 50;
 					// defined a timeout for the quiz
 
-					const result = initiateQuiz(interaction, { type: subcommand, wordLength, inversions: inverted, collaborative, length: quizLength, font, time });
+					const result = initiateQuiz(interaction, { type: subcommand, wordLength, inversions: inverted, collaborative, length: quizLength, font, time, extensions });
 
 					if(typeof result !== 'string') {
 						// TODO: insert quiz data & embed perhaps
@@ -407,6 +408,7 @@ const commands = [
 				}
 				case "secondaries":  {
 					const inverted = interaction.options.get('inverted')?.value || true;
+					const extensions = interaction.options.get('extensions')?.value || true;
 					const time = interaction.options.get('time')?.value;
 					const font = interaction.options.get('font')?.value;
 					const wordLength = interaction.options.get('group_size')?.value || 3;
@@ -414,7 +416,7 @@ const commands = [
 					let quizLength = interaction.options.get('length')?.value || 5;
 					// defined a timeout for the quiz
 
-					const result = initiateQuiz(interaction, { type: subcommand, wordLength, inversions: inverted, collaborative, length: quizLength, font, time });
+					const result = initiateQuiz(interaction, { type: subcommand, wordLength, inversions: inverted, collaborative, length: quizLength, font, time, extensions });
 
 					if(typeof result !== 'string') {
 						// TODO: insert quiz data & embed perhaps

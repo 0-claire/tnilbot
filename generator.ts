@@ -69,13 +69,13 @@ export async function generateSecondary(settings: { inverted: boolean, font: Fon
 
 }
 
-export async function generateAffix(inverted: boolean, font: Font | 'random' = 'basic'): Promise<{ image: any, answer: string }> {
+export async function generateAffix(inverted: boolean, font: Font | 'random' = 'basic', extensions: boolean = false): Promise<{ image: any, answer: string }> {
 	if(font === 'random')
 		font = 'basic';
-	const generateTopChar = Math.random() > 0.5 ? true : false;
+	const generateTopChar = extensions && Math.random() > 0.5 ? true : false;
 	let preChar = '';
 
-	const generateBottomChar = Math.random() > 0.5 ? true : false;
+	const generateBottomChar = extensions && Math.random() > 0.5 ? true : false;
 	let postChar = '';
 
 	let secondaryChar = generateChar();

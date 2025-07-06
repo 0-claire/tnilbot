@@ -13,6 +13,7 @@ export type CommandID = Snowflake & string;
 export type QuizType = |'secondaries'|'affixes';
 
 export interface QuizOptions {
+	extensions: boolean;
 	time: number;
 	type: QuizType;
 	inversions: boolean;
@@ -23,6 +24,7 @@ export interface QuizOptions {
 }
 
 export class Quiz implements QuizOptions {
+	extensions: boolean;
 	inversions: boolean;
 	readonly time: number;
 	wordLength: number;
@@ -82,6 +84,7 @@ export class Quiz implements QuizOptions {
 		this.interactionTimer = null;
 		settings.time = settings.time * 1000
 		this.time = settings.time <= config.quizzes.maxQuestionTimeoutMs ? settings.time : config.quizzes.maxQuestionTimeoutMs;
+		this.extensions = settings.extensions;
 	}
 
 	private setQuestionTimer() {
@@ -249,7 +252,7 @@ export class Quiz implements QuizOptions {
 		};
 		case 'affixes': {
 			while(!result || typeof result === 'string') 
-				result = await generateAffix(this.inversions, this.font);
+				result = await generateAffix(this.inversions, this.font, this.extensions);
 			
 		};
 		}
@@ -347,19 +350,19 @@ export function initiateQuiz(interaction: CommandInteraction, options: QuizOptio
 			publicQuiz: null,
 			privateQuizzes: new Map(),
 		};
-		capsule = quizzes[channelId];
+		// capsule = quizzes[channelId];
 	}
 	// check user engagement
 	// end prev quiz if applicable
 	if(engagedUsers[userId])
 		return "ALREADY_ENGAGED";
 	if(options.collaborative === true) {
-		if(quizzes[channelId].publicQuiz)
+		if(quizzes[channelId].publicQuiz !== null)
 			return "QUIZ_IN_CHANNEL_EXISTS";
 		else {
 			quizzes[channelId].publicQuiz = new Quiz(interaction, options);
-			quiz = capsule.publicQuiz;
-			return quiz;
+			// quiz = capsule.publicQuiz;
+			return quizzes[channelId].publicQuiz;
 		}
 	} else {
 		const quiz = new Quiz(interaction, options);
