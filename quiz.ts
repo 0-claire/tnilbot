@@ -80,6 +80,7 @@ export class Quiz implements QuizOptions {
 		this.index = 0;
 		this.length = settings.length <= config.quizzes.maxLength ? settings.length : config.quizzes.maxLength;
 		this.interactionTimer = null;
+		settings.time = settings.time * 1000
 		this.time = settings.time <= config.quizzes.maxQuestionTimeoutMs ? settings.time : config.quizzes.maxQuestionTimeoutMs;
 	}
 
