@@ -296,9 +296,10 @@ export class Quiz implements QuizOptions {
 
 	destroy() {
 		this.engagements.forEach(destroyEngagement);
-		if(this.collaborative)
+		if(this.collaborative) {
+			delete quizzes[this.interaction.channelId].publicQuiz;
 			quizzes[this.interaction.channelId].publicQuiz = null;
-		else
+		} else
 			quizzes[this.interaction.channelId].privateQuizzes.delete(this.interaction.commandId);
 	}
 
@@ -342,7 +343,6 @@ export const engagedUsers: { [key: UserID]: Engagement } = {};
 export function initiateQuiz(interaction: CommandInteraction, options: QuizOptions): string | Quiz {
 	const userId = interaction.user.id;
 	const channelId = interaction.channelId;
-	let capsule;
 	let quiz;
 	// check user engagement, end quiz
 	if(quizzes.hasOwnProperty(channelId)) {} else {
@@ -350,19 +350,18 @@ export function initiateQuiz(interaction: CommandInteraction, options: QuizOptio
 			publicQuiz: null,
 			privateQuizzes: new Map(),
 		};
-		// capsule = quizzes[channelId];
 	}
 	// check user engagement
 	// end prev quiz if applicable
 	if(engagedUsers[userId])
 		return "ALREADY_ENGAGED";
 	if(options.collaborative === true) {
-		if(quizzes[channelId].publicQuiz !== null)
+		if(quizzes[channelId].publicQuiz !== null && quizzes[channelId].publicQuiz !== undefined)
 			return "QUIZ_IN_CHANNEL_EXISTS";
 		else {
-			quizzes[channelId].publicQuiz = new Quiz(interaction, options);
-			// quiz = capsule.publicQuiz;
-			return quizzes[channelId].publicQuiz;
+			const quiz = new Quiz(interaction, options)
+			quizzes[channelId].publicQuiz = quiz;
+			return quiz;
 		}
 	} else {
 		const quiz = new Quiz(interaction, options);
