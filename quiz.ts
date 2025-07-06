@@ -13,6 +13,7 @@ export type CommandID = Snowflake & string;
 export type QuizType = |'secondaries'|'affixes';
 
 export interface QuizOptions {
+	time: number;
 	type: QuizType;
 	inversions: boolean;
 	wordLength: number;
@@ -23,6 +24,7 @@ export interface QuizOptions {
 
 export class Quiz implements QuizOptions {
 	inversions: boolean;
+	readonly time: number;
 	wordLength: number;
 	index: number;
 	collaborative: boolean;
@@ -78,10 +80,11 @@ export class Quiz implements QuizOptions {
 		this.index = 0;
 		this.length = settings.length <= config.quizzes.maxLength ? settings.length : config.quizzes.maxLength;
 		this.interactionTimer = null;
+		this.time = settings.time <= config.quizzes.maxQuestionTimeoutMs ? settings.time : config.quizzes.maxQuestionTimeoutMs;
 	}
 
 	private setQuestionTimer() {
-		this.questionTimer = setTimeout(this.nextQuestion.bind(this), config.quizzes.questionTimoutMs);
+		this.questionTimer = setTimeout(this.nextQuestion.bind(this), this.time);
 	}
 	private setInteractionTimer() {
 		async function ender() {
