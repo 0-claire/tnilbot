@@ -1,56 +1,25 @@
-import { Client, Events, GatewayIntentBits, REST, Routes, SlashCommandBuilder, AttachmentBuilder, SlashCommandOptionsOnlyBuilder, SlashCommandSubcommandsOnlyBuilder, ContextMenuCommandBuilder, ApplicationCommandType } from 'discord.js'
-import { textToScript } from '@zsnout/ithkuil/script/index.js'
-import { Result } from '@zsnout/ithkuil/script'
+import { Client, Events, GatewayIntentBits, REST, Routes, SlashCommandBuilder, AttachmentBuilder, EmbedBuilder, SlashCommandOptionsOnlyBuilder, SlashCommandSubcommandsOnlyBuilder, ContextMenuCommandBuilder, ApplicationCommandType, User, APIEmbed, Snowflake, Message, } from 'discord.js'
 import secrets from './secrets.json' with { type: 'json' }
-import drawCharsFromRaw from './transform.js'
-import { textToPng } from './transform.js'
-import { generateChar } from './generator.js'
+import { textToPng, render } from './transform.js'
+import { generateChar, generateVowel, generateSecondary, generateAffix, } from './generator.js'
 import config from './config.js'
+import { initiateQuiz, engagedUsers, quizzes, Quiz, QuizOptions, } from './quiz.js';
+import { Font } from './util.js'
 
 // TODO: move code into commands/ and into svg.ts(x) or tnil.ts(x)
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({
+	intents: [
+		GatewayIntentBits.Guilds,
+		GatewayIntentBits.GuildMessages,
+		GatewayIntentBits.MessageContent,
+	]
+});
 
 // Log successful login
 client.on(Events.ClientReady, readyClient => {
 	console.log(`Logged in as ${readyClient.user.tag}!`);
 });
-
-async function render(text, font) {
-	// Parse text
-	var phrases = text.split(' ');
-	// const vowels = '[aeiouäëïöüáéíóúâêîôû']'
-	const modularAdjunctRegex = /^['wy]?[aeiouäëïöüáéíóúâêîôû]+(w|y|h[lrmnň]?w?)?/;
-	const affixualAdjunctRegex = /^[aeiouäëïöüáéíóúâêîôû]+[^aeiouäëïöüáéíóúâêîôû]+[aeiouäëïöüáéíóúâêîôû]{0,2}/;
-	const multipleAffixAdjunctRegex = /^ë?'?h[wrl]?/;
-	const regexA = /^h([nmň][aeiouäëïöüáéíóúâêîôû']{1,3}|([aeou]?i?|iu))/;
-	const regexB = /^ah[nmň][aeiouäëïöüáéíóúâêîôû']{1,3}x/;
-	// TODO: honestly why not just use the parser to determine if it's a suppletive or carrier
-	// TODO: or even just add spaces after quat chars or before prim chars
-	const regexC = /^(([wy]|h[wrl]?)?[aeiouäëïöüáéíóúâêîôû']{1,3}s|s[aeiouäëïöüáéíóúâêîôû']{1,3}[^aeiouäëïöüáéíóúâêîôûxy])/;
-	for(var i = phrases.length -1; i > 0; i--) {
-		console.log('i:', i);
-		const currentPhrase = phrases[i];
-		const previousPhrase = phrases[i-1];
-
-		if(regexA.test(previousPhrase.toLowerCase()) ||
-		   regexB.test(previousPhrase.toLowerCase()) ||
-		   modularAdjunctRegex.test(previousPhrase.toLowerCase()) || // Don't separate aspect adjuncts & others
-		   regexC.test(previousPhrase.toLowerCase())
-		  ) {
-			console.log(`phrase ${currentPhrase} matches`);
-			phrases[i-1] = `${previousPhrase} ${currentPhrase}`
-			phrases.splice(i, 1);
-		}
-	}
-	console.log('phrases:', phrases);
-	const parserObjects: Result<any>[] = phrases.map(async x => await textToScript(x));
-	// Convert to script-compatible text and then to png
-	const pngBuffer = await drawCharsFromRaw(parserObjects, font);
-	var result = new AttachmentBuilder(pngBuffer, { name: 'image.png' });
-	console.log("result:", result)
-	return result
-}
 
 // define slash command data
 function createSlashCommand(settings: {
@@ -80,7 +49,7 @@ const commands = [
 	{ 
 		data: new SlashCommandBuilder()
 			.setName('render')
-			.setDescription('Renders into TNIL script')
+			.setDescription('Renders valid TNIL words into TNIL script')
 			.addStringOption(option => 
 				option
 				.setName('text')
@@ -135,6 +104,69 @@ const commands = [
 					});
 			} else {
 				await interaction.reply("Internal error");
+				console.log('result:', result);
+			}
+		}
+	},
+	{ 
+		data: new SlashCommandBuilder()
+			.setName('render_raw')
+			.setDescription('Renders literal chars into TNIL font')
+			.addStringOption(option => 
+				option
+				.setName('text')
+				.setDescription("The text to render into the script")
+				.setRequired(true)
+			)
+			.addUserOption(option =>
+								 option.
+								 setName("mention")
+								 .setDescription("The user to mention (ping)")
+								 .setRequired(false)
+								 )
+			.addStringOption(option => 
+			  option
+				.setName("font")
+				.setDescription("which font should I use")
+				.addChoices(
+					{ name: "calligraphic", value: "basic" },
+					{ name: "handwritten", value: "flow" }
+				)
+			)
+			// .addMentionableOption(option => 
+				// option
+				// .setName("reply")
+				// .setDescription("Message to reply to")
+			// )
+			,
+		exec: async function(interaction) {
+			const text = interaction.options.get('text')?.value
+			const user = interaction.options.get('mention')?.value
+			const font = interaction.options.get('font')?.value;
+			console.log('user option:', user);
+			var result: AttachmentBuilder | string | null;
+			try {
+				result = await textToPng(text, font);
+			} catch(e) {
+					result = null;
+				if(e.name === 'PARSING_ERROR') {
+					result = `Parsing error: ${e.message}`;
+				} else {
+					console.log(e);
+				}
+			}
+			if(result) {
+				if(typeof result === 'string')
+					await interaction.reply(result);
+				else
+					await interaction.reply({
+						// content: `text: ||\`${ text || 'null'}\`||`,
+						content: user ? `<@${user}>` : undefined,
+						files: [result]
+					});
+			} else {
+				await interaction.reply("Internal error");
+				console.log('result:', result);
 			}
 		}
 	},
@@ -160,35 +192,16 @@ const commands = [
 			const inverted = interaction.options.get('inverted')?.value;
 			const font = interaction.options.get('font')?.value;
 			const wordLength = 5;
-			const randomChars = [...Array(wordLength).keys()].map(x => { 
-				const char = generateChar();
-				// if inverted is set to true, use a random number check to determine whether the char is inverted
-				if(inverted === true || (config.quizzes.inversionByDefault === true && inverted !== false))
-					return Math.random() > 0.5 ? `${char}'` : char;
-				else
-					return char;
-			}).join('');
-			// const charsAsWords = randomChars.map(x => 'a' + x + 'al').join(' ');
-			var result: AttachmentBuilder | string | null;
-			try {
-				result = await textToPng(randomChars, font);
-			} catch(e) {
-				result = null;
-				if(e.name === 'PARSING_ERROR')
-					result = `Parsing error: ${e.message}`;
-				else
-					console.log(e);
-			}
-			if(result) {
-				if(typeof result === 'string')
-					await interaction.reply(result);
-				else
-					await interaction.reply({
-						content: `Transcript: ||${randomChars}||`,
-						files: [result]
-					});
+
+			const result = await generateSecondary({ inverted, font, wordLength });
+			if(typeof result !== 'string') {
+				const { image, answer } = result;
+				await interaction.reply({
+					content: `Transcript: ||${answer}||`,
+					files: [image]
+				});
 			} else {
-				await interaction.reply("Internal error");
+				await interaction.reply(result);
 			}
 		}
 	},
@@ -246,6 +259,7 @@ const commands = [
 					});
 			} else {
 				await interaction.reply("Internal error");
+				console.log('result:', result);
 			}
 		}
 	},
@@ -295,57 +309,186 @@ const commands = [
 				)
 			)
 			)
+			builder.addSubcommand(command =>
+				command
+					.setName("affixes")
+					.setDescription("VxCs/CsVx affixes")
+					.addBooleanOption(option => 
+					  option
+						.setName("inversions")
+						.setDescription("Mix in inverted chars")
+					 )
+					.addBooleanOption(option => 
+					  option
+						.setName("extensions")
+						.setDescription("Mix in char extensions")
+					 )
+			.addNumberOption(option =>
+				option
+					.setName("group_size")
+					.setDescription("Number of chars (not including extensions) in each question")
+			)
+			.addNumberOption(option =>
+				option
+					.setName("length")
+					.setDescription("Number of questions to be given")
+			)
+			.addNumberOption(option =>
+				option
+					.setName("time")
+					.setDescription("Number of seconds to answer each question")
+			)
+			.addBooleanOption(option =>
+				option
+					.setName("collaborative")
+					.setDescription("Allow others to join in")
+			)
+			.addStringOption(option => 
+			  option
+				.setName("font")
+				.setDescription("which font should I use")
+				.addChoices(
+					{ name: "calligraphic", value: "basic" },
+					{ name: "handwritten", value: "flow" }
+				)
+			)
+			)
 			return builder;
 		}),
-		exec: async function(interaction) {
+		exec: async interaction => {
 			// const subcommand = interaction.options.get('_subcommand')?.value 
 			// TODO: there's probably a better way to do this
 			const subcommand = interaction.options['_subcommand'];
 			switch(subcommand) {
+				case "affixes":  {
+					const inverted = interaction.options.get('inverted')?.value || true;
+					const font = interaction.options.get('font')?.value;
+					const wordLength = interaction.options.get('group_size')?.value || 3;
+					const collaborative: boolean = interaction.options.get('collaborative')?.value || false;
+					let quizLength = interaction.options.get('length')?.value || 5;
+					if(quizLength > 50) quizLength = 50;
+					// defined a timeout for the quiz
+
+					const result = initiateQuiz(interaction, { type: subcommand, wordLength, inversions: inverted, collaborative, length: quizLength, font });
+
+					if(typeof result !== 'string') {
+						// TODO: insert quiz data & embed perhaps
+						
+						await interaction.reply(`Quiz started.`);
+						try {
+							await result.activate(
+								async result => {
+									await interaction.followUp({
+										// content: `Answer: ||${result.answer}||`,
+										files: [result.image],
+									})
+								},
+								async (answer: string) => {
+									await interaction.followUp(`Too late. Answer was \`${answer}\``);
+								},
+								async (winner: User, answer: string) => {
+									await interaction.followUp(`Well done <@${winner.id}>! Answer was \`${answer}\``)
+								},
+								async (stats) => {
+									// TODO: elaborate
+									await interaction.followUp(`Quiz ended.`)
+								},
+							);
+						} catch(e) {
+							await interaction.followUp("Internal error");
+							console.log('e:', e);
+						}
+					} else {
+						// TODO: elaborate
+						await interaction.reply("You're already engaged in something. Please cancel it or wait 1m till it expires");
+					}
+					return subcommand;
+				}
 				case "secondaries":  {
 					const inverted = interaction.options.get('inverted')?.value || true;
 					const font = interaction.options.get('font')?.value;
-					const wordLength = interaction.options.get('group_size')?.value || 5;
-					const collaborative = interaction.options.get('collaborative')?.value || 5;
+					const wordLength = interaction.options.get('group_size')?.value || 3;
+					const collaborative: boolean = interaction.options.get('collaborative')?.value || false;
 					let quizLength = interaction.options.get('length')?.value || 5;
-					if(quizLength > 50) quizLength = 50;
-					await interaction.reply("Quiz started");
+					// defined a timeout for the quiz
 
-					for(let i = 1; i <= quizLength; i++) {
-					}
+					const result = initiateQuiz(interaction, { type: subcommand, wordLength, inversions: inverted, collaborative, length: quizLength, font });
 
-					const randomChars = [...Array(wordLength).keys()].map(x => { 
-						const char = generateChar();
-						// if inverted is set to true, use a random number check to determine whether the char is inverted
-						return  inverted === true ? (Math.random() > 0.5 ? `${char}'` : char ) : char;
-					}).join('');
-					// const charsAsWords = randomChars.map(x => 'a' + x + 'al').join(' ');
-					var result: AttachmentBuilder | string | null;
-					try {
-						result = await textToPng(randomChars, font);
-					} catch(e) {
-						result = null;
-						if(e.name === 'PARSING_ERROR')
-							result = `Parsing error: ${e.message}`;
-						else
-							console.log(e);
-					}
-					if(result) {
-						if(typeof result === 'string')
-							await interaction.reply(result);
-						else
-							await interaction.reply({
-								content: `Transcript: ||${randomChars}||`,
-								files: [result]
-							});
+					if(typeof result !== 'string') {
+						// TODO: insert quiz data & embed perhaps
+						
+						await interaction.reply(`Quiz started.`);
+						try {
+							await result.activate(
+								async result => {
+									await interaction.followUp({
+										// content: `Answer: ||${result.answer}||`,
+										files: [result.image],
+									})
+								},
+								async (answer: string) => {
+									await interaction.followUp(`Too late. Answer was \`${answer}\``);
+								},
+								async (winner: User, answer: string) => {
+									await interaction.followUp(`Well done <@${winner.id}>! Answer was \`${answer}\``)
+								},
+								async (stats) => {
+									// TODO: elaborate
+									await interaction.followUp(`Quiz ended.`)
+								},
+							);
+						} catch(e) {
+							await interaction.followUp("Internal error");
+							console.log('e:', e);
+						}
 					} else {
-						await interaction.reply("Internal error");
+						// TODO: elaborate
+						await interaction.reply("You're already engaged in something. Please cancel it or wait 1m till it expires");
 					}
-						return subcommand;
+					return subcommand;
 				};
 				default: {
-					await interaction.reply("This is not a valid subcommand");
+					await interaction.followUp("This is not a valid subcommand");
 				};
+			}
+		}
+	},
+	{
+		data: createSlashCommand({ name: 'affixes', description: 'random affixes'}, x => x)
+			.addBooleanOption(option => 
+			  option
+				.setName("slot_vi")
+				.setDescription("mix in slot VI affixes (inverted)")
+			 )
+			.addStringOption(option => 
+			  option
+				.setName("font")
+				.setDescription("which font should I use")
+				.addChoices(
+					{ name: "calligraphic", value: "basic" },
+					{ name: "handwritten", value: "flow" }
+				)
+			)
+		,
+		exec: async interaction => {
+			// const wordLength = 5;
+			const inverted = interaction.options.get('slot_vi')?.value
+			const font = interaction.options.get('font')?.value;
+
+			const result = await generateAffix(inverted, font)
+			const { image, answer } = result;
+
+			if(result) {
+				if(typeof result === 'string')
+					await interaction.reply(result);
+				else
+					await interaction.reply({
+						content: `Transcript: ||${answer}||`,
+						files: [image]
+					});
+			} else {
+				await interaction.reply("Internal error");
+				console.log('result:', result);
 			}
 		}
 	},
@@ -365,13 +508,15 @@ client.on(Events.InteractionCreate, async interaction => {
 
 	// Run slash command function on its receipt
 	if (interaction.isChatInputCommand()) {
-		const comm = commands.find(c => c.data.name === interaction.commandName);
+		const comm = commands.find(c => c.data?.name === interaction.commandName);
 		if(comm) {
 			try {
 				await comm.exec(interaction)
 			} catch(e) {
 				console.log('error! =>', e)
-				await interaction.reply("An error occurred running this command. It has been logged")
+				try {
+					await interaction.reply("An error occurred running this command. It has been logged")
+				} catch(e) {}
 			}
 		}
 	} else if(interaction.isMessageContextMenuCommand()) {
@@ -382,6 +527,151 @@ client.on(Events.InteractionCreate, async interaction => {
 		return
 	}
 });
+
+
+// Listen for commands via message
+client.on(Events.MessageCreate, async message => {
+
+	// Ignore messages from bots
+	if (message.author.bot) return;
+
+	// Check prefix
+	if(message.content.startsWith(config.prefix)) {
+		// Check if the message is a reply to another message
+		if (message.type === 19 && message.reference?.messageId) {
+			try {
+				const repliedMessage = await message.channel.messages.fetch(message.reference.messageId);
+				
+				// console.log('User replied to a message:');
+				// console.log('Original Message:', repliedMessage.content);
+				// console.log('Reply Content:', message.content);
+
+				// You can now do something with repliedMessage
+				const array = message.content.split(' ');
+				const content = array.slice(1).join(' ');
+				if(content.length < 1) {
+					message.reply("no text provided");
+					return
+				}
+				const command = array[0].replace(config.prefix, '');
+				var text = '';
+				var ping = false;
+				var handwritten = false;
+				var commandFound = false;
+				// if command is one of
+				if(['r', 'render'].some(x => x === command)) {
+					commandFound = true;
+				}
+				else if(['rh', 'renderHandwritten'].some(x => x === command)) {
+					commandFound = true;
+					handwritten = true;
+				}
+				else if(['rp', 'renderPing'].some(x => x === command)) {
+					commandFound = true;
+					ping = true;
+				}
+				else if(['rhp', 'renderHandwritenPing'].some(x => x === command)) {
+					commandFound = true;
+					handwritten = true;
+					ping = true;
+				} else {
+					commandFound = false;
+				}
+
+				if(commandFound) {
+					var result: AttachmentBuilder | string | null;
+					try {
+						result = await render(content, handwritten ? "flow" : "basic");
+					} catch(e) {
+							result = null;
+						if(e.name === 'PARSING_ERROR') {
+							result = `Parsing error: ${e.message}`;
+						} else {
+							console.log(e);
+						}
+					}
+					if(result) {
+						if(typeof result === 'string') // prolly a parsing error
+							await message.reply(result);
+						else {
+							// check it was sent by us
+							var originatingUserId: string | null = null
+							if(repliedMessage.embeds?.length > 0) {
+								const embed = repliedMessage.embeds?.[0]
+								const match = embed.footer.text.match(/User ID:\s*(\d{17,})/)
+								originatingUserId = match ? match[1] : null
+							}
+							await repliedMessage.reply(createUserEmbed(message.author, result, ping && originatingUserId ? originatingUserId : null));
+						}
+					} else {
+						// TODO: make ephemeral
+						await message.reply("Internal error");
+						console.log('result:', result);
+					}
+				} else {
+					throw new Error()
+				}
+			} catch (err) {
+				console.error('Failed to fetch the replied-to message:', err);
+			}
+		} else {
+			await passMessage(message);
+		}
+	} else {
+		// skip bot commands and the like
+		if(/^[\$\.\!\-]/.test(message.content)) 
+			return;
+		// pass off to quizzes based on channels
+		await passMessage(message);
+		return;
+	}
+	
+});
+
+// function passMessage(message: Message) {
+async function passMessage(message: Message): Promise<boolean> {
+	// check quizzes, private, then group
+	const engagement = engagedUsers[message.author.id]
+	let quiz = quizzes[message.channel.id]?.publicQuiz;
+	// first check for private quizzes
+	if(engagement) {
+		// find quiz & pass off data
+		// return its result (accepted, rejected)
+		quiz = quizzes[message.channel.id]?.privateQuizzes?.get(engagement.commandId);
+		if(quiz && message.author.id === engagement.userId)
+			await quiz.receiveAttempt(message);
+		return true
+	} else if(quiz) { // then check public quizzes
+		await quiz.receiveAttempt(message)
+		return true;
+	} else { // otherwise fail
+		return false;
+	}
+}
+
+function createUserEmbed(user: User, image: AttachmentBuilder, mention: null | Snowflake = null) {
+  return {
+    content: mention ? `<@${mention}>` : null, // ping if desired
+    embeds: [
+      new EmbedBuilder()
+        .setAuthor({
+          name: `${user.tag}`, // Shows as clickable in Discord UI
+          iconURL: user.displayAvatarURL({ size: 64 }),
+          // url: `https://discord.com/users/${user.id}` // Makes username clickable
+        })
+        // .setImage(imageUrl) // Big wide image here
+		.setImage(`attachment://image.png`)
+        .setColor(0x5865F2) // Discord blurple
+        .setFooter({ text: `User ID: ${user.id}` })
+        .setTimestamp()
+    ],
+	files: [image],
+    allowedMentions: {
+		users: mention ? [mention] : [],
+		// repliedUser: mention ? true : false
+	}
+  };
+}
 
 // Log in the bot
 client.login(secrets.token);

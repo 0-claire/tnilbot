@@ -1,4 +1,6 @@
 const config = {
+	prefix: '$',
+
 	fonts: {
 		basic: {
 			font: '100px IthkuilBasic',
@@ -20,6 +22,12 @@ const config = {
 	quizzes: {
 		numberTries: 5,
 		inversionByDefault: true,
+		timeoutMs: 1000*20,
+		questionTimoutMs: 1000*5,
+		// how long to wait before giving an answer and giving the next question
+		answerQuestionIntervalMs: 1000*2.5,
+		maxUninteractedQuestions: 3,
+		maxLength: 20,
 	},
 };
 
