@@ -488,19 +488,41 @@ export const VOWEL_FORMS: { [key: string]: [1|2|3, 1|2|3|4|5|6|7|8|9|0] } = {
   // oa: [4, 9],
 };
 
+export const ALT_VOWELS = {
+	üo:'ia',
+	uä:'ie:',
+	uë:'io:',
+	üä:'iö:',
+	üë:'eë:',
+	uö:'öë:',
+	uo:'öä:',
+	ue:'ië:',
+	ua:'iä:',
+
+	ia: 'üo',
+	ie: 'uä',
+	io: 'uë',
+	iö: 'üä',
+	eë: 'üë',
+	öë: 'uö',
+	öä: 'uo',
+	ië: 'ue',
+	iä: 'ua',
+}
+
 export const AFFIX_DIACRITICS = [
-	'ó',
-	'a',
-	'e',
-	'u',
-	'o',
-	'i',
-	'ï',
-	'ö',
-	'ü',
-	'ë',
-	'ä',
-	'ò',
+	'ó', // 0
+	'a', //
+	'e', //
+	'u', //
+	'o', //
+	// 'i', // 5
+	'ï', // 5
+	'ö', // 6
+	'ü', // 7
+	'ë', // 8
+	'ä', // 9
+	'ò', // Ca
 ];
 
 export const AFFIX_TYPE_DIACRITICS = [

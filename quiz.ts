@@ -4,13 +4,13 @@ import {
 import config from './config.js';
 import { Font, sleep, } from './util.js';
 import {
-	generateSecondary, GenerateResult, GeneratedQuestion, generateAffix,
+	generateSecondary, GenerateResult, GeneratedQuestion, generateAffix, generateExtensions,
 } from './generator.js';
 
 export type UserID = Snowflake & string;
 export type ChannelID = Snowflake & string;
 export type CommandID = Snowflake & string;
-export type QuizType = |'secondaries'|'affixes';
+export type QuizType = |'secondaries'|'affixes'|'extensions'|'cases';
 
 export interface QuizOptions {
 	extensions: boolean;
@@ -57,15 +57,15 @@ export class Quiz implements QuizOptions {
 			winner: null,
 		};
 
-	sendQuestion: (result: {image: any, answer: string}) => Promise<any>;
-	answerQuestion: (answer: string) => Promise<any>;
-	announceWinner: (winner: User, answer: string) => Promise<any>;
+	sendQuestion: (result: GeneratedQuestion) => Promise<any>;
+	answerQuestion: (answer: string | string[]) => Promise<any>;
+	announceWinner: (winner: User, answer: string | string[]) => Promise<any>;
 	declareEnd: (stats) => Promise<any>;
 	questionTimer: ReturnType<typeof setTimeout>;
 	
 	lastQuestion: {
 		winner: null | User;
-		answer: string;
+		answer: string | string[];
 	};
 	uninteractedQuestions: number;
 	processingAttempt: boolean;
@@ -110,7 +110,7 @@ export class Quiz implements QuizOptions {
 
 	ending: boolean; // has this quiz received a cancel command?
 
-	async activate(sendQuestion: (result: {image: any, answer: string}) => Promise<any>, answerQuestion: (answer: string) => Promise<any>, announceWinner: (winner: User, answer: string) => Promise<any>, declareEnd: (stats) => Promise<any>) {
+	async activate(sendQuestion: (result: {image: any, answer: string | string[]}) => Promise<any>, answerQuestion: (answer: string | string[]) => Promise<any>, announceWinner: (winner: User, answer: string | string[]) => Promise<any>, declareEnd: (stats) => Promise<any>) {
 		// for when no one gets it
 		this.answerQuestion = answerQuestion;
 		this.sendQuestion = sendQuestion;
@@ -182,6 +182,7 @@ export class Quiz implements QuizOptions {
 		const attempt: string = message.content;
 		// TODO: perform substitutions foor chars where desired
 		if(message.content.startsWith('$')) {
+			// validate against users starting the quiz or part of the collab
 			if(message.content === '$cancel') {
 				await this.end('cancel received');
 				return false;
@@ -190,15 +191,22 @@ export class Quiz implements QuizOptions {
 				return false;
 		}
 		this.uninteractedQuestions = 0;
-		if(attempt?.toLowerCase() === this.lastQuestion?.answer?.toLowerCase()) {
-			this.clearQuestionTimeout();
-			this.clearInteractionTimeout();
-			this.lastQuestion.winner = message.author;
-			return true;
-		} else 
-			return false;
-		
-		
+		let evaluation = false
+		if(this.lastQuestion?.answer) {
+			if(Array.isArray(this.lastQuestion.answer)) {
+				if(this.lastQuestion.answer.some(x => x.toLowerCase() === attempt?.toLowerCase())) 
+				   evaluation = true
+			} else if(attempt?.toLowerCase() === this.lastQuestion?.answer?.toLowerCase()) {
+				evaluation = true
+			}
+			if(evaluation === true) {
+				this.clearQuestionTimeout();
+				this.clearInteractionTimeout();
+				this.lastQuestion.winner = message.author;
+				return true;
+			}
+		}
+		return false;
 	}
 
 	async receiveAttempt(message: Message) {
@@ -245,16 +253,28 @@ export class Quiz implements QuizOptions {
 			while(!result || typeof result === 'string') {
 				result = await generateSecondary({
 					...this.settings,
-					inverted: this.settings.inversions, 
 				});
 			}
 				
 		};
 		case 'affixes': {
+			// TODO: accept alternate forms of affixes
 			while(!result || typeof result === 'string') 
 				result = await generateAffix(this.inversions, this.font, this.extensions);
 			
 		};
+		case 'extensions': {
+			// TODO: accept alternate forms of affixes
+			while(!result || typeof result === 'string') 
+				result = await generateExtensions(this.settings);
+			
+		};
+		// case 'cases': {
+			// // TODO: accept alternate forms of affixes
+			// while(!result || typeof result === 'string') 
+				// result = await generateAffix(this.inversions, this.font, this.extensions);
+			
+		// };
 		}
 
 		// for shitty ts
@@ -265,6 +285,7 @@ export class Quiz implements QuizOptions {
 			winner: null,
 			answer: result.answer,
 		};
+		console.log('last question:', this.lastQuestion);
 
 		if(this.ending)
 			return;

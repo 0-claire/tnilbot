@@ -189,11 +189,11 @@ const commands = [
 			 return builder;
 		}),
 		exec: async function(interaction) {
-			const inverted = interaction.options.get('inverted')?.value;
+			const inversions = interaction.options.get('inverted')?.value;
 			const font = interaction.options.get('font')?.value;
 			const wordLength = 5;
 
-			const result = await generateSecondary({ inverted, font, wordLength });
+			const result = await generateSecondary({ inversions, font, wordLength });
 			if(typeof result !== 'string') {
 				const { image, answer } = result;
 				await interaction.reply({
@@ -228,6 +228,7 @@ const commands = [
 			const wordLength = 5;
 			const inverted = interaction.options.get('inverted')?.value
 			const font = interaction.options.get('font')?.value;
+
 			const secondaryChar = generateChar();
 			let preChar = generateChar(true);
 			if(preChar === secondaryChar) preChar = '=';
@@ -265,196 +266,127 @@ const commands = [
 	},
 	{
 		data: createSlashCommand({ name: 'quiz', description: 'quiz on script chars'}, builder => {
-			builder.addSubcommand(command =>
+			function createOptions(innerBuilder) {
+				innerBuilder
+					.addBooleanOption(option => 
+					  option
+						.setName("inversions")
+						.setDescription("Mix in inverted chars")
+					 )
+					.addBooleanOption(option => 
+					  option
+						.setName("extensions")
+						.setDescription("Mix in char extensions")
+					 )
+			.addNumberOption(option =>
+				option
+					.setName("group_size")
+					.setDescription("Number of chars (not including extensions) in each question")
+			)
+			.addNumberOption(option =>
+				option
+					.setName("length")
+					.setDescription("Number of questions to be given")
+			)
+			.addNumberOption(option =>
+				option
+					.setName("time")
+					.setDescription("Number of seconds to answer each question")
+			)
+			.addBooleanOption(option =>
+				option
+					.setName("collaborative")
+					.setDescription("Allow others to join in")
+			)
+			.addStringOption(option => 
+			  option
+				.setName("font")
+				.setDescription("which font should I use")
+				.addChoices(
+					{ name: "calligraphic", value: "basic" },
+					{ name: "handwritten", value: "flow" }
+				)
+				)
+				return innerBuilder;
+			}
+
+			builder.addSubcommand(command => {
 				command
 					.setName("secondaries")
 					.setDescription("Consonantal chars")
-					.addBooleanOption(option => 
-					  option
-						.setName("inversions")
-						.setDescription("Mix in inverted chars")
-					 )
-					.addBooleanOption(option => 
-					  option
-						.setName("extensions")
-						.setDescription("Mix in char extensions")
-					 )
-			.addNumberOption(option =>
-				option
-					.setName("group_size")
-					.setDescription("Number of chars (not including extensions) in each question")
-			)
-			.addNumberOption(option =>
-				option
-					.setName("length")
-					.setDescription("Number of questions to be given")
-			)
-			.addNumberOption(option =>
-				option
-					.setName("time")
-					.setDescription("Number of seconds to answer each question")
-			)
-			.addBooleanOption(option =>
-				option
-					.setName("collaborative")
-					.setDescription("Allow others to join in")
-			)
-			.addStringOption(option => 
-			  option
-				.setName("font")
-				.setDescription("which font should I use")
-				.addChoices(
-					{ name: "calligraphic", value: "basic" },
-					{ name: "handwritten", value: "flow" }
-				)
-			)
-			)
-			builder.addSubcommand(command =>
+				return createOptions(command)
+			});
+
+			builder.addSubcommand(command => {
 				command
 					.setName("affixes")
 					.setDescription("VxCs/CsVx affixes")
-					.addBooleanOption(option => 
-					  option
-						.setName("inversions")
-						.setDescription("Mix in inverted chars")
-					 )
-					.addBooleanOption(option => 
-					  option
-						.setName("extensions")
-						.setDescription("Mix in char extensions")
-					 )
-			.addNumberOption(option =>
-				option
-					.setName("group_size")
-					.setDescription("Number of chars (not including extensions) in each question")
-			)
-			.addNumberOption(option =>
-				option
-					.setName("length")
-					.setDescription("Number of questions to be given")
-			)
-			.addNumberOption(option =>
-				option
-					.setName("time")
-					.setDescription("Number of seconds to answer each question")
-			)
-			.addBooleanOption(option =>
-				option
-					.setName("collaborative")
-					.setDescription("Allow others to join in")
-			)
-			.addStringOption(option => 
-			  option
-				.setName("font")
-				.setDescription("which font should I use")
-				.addChoices(
-					{ name: "calligraphic", value: "basic" },
-					{ name: "handwritten", value: "flow" }
-				)
-			)
-			)
+				return createOptions(command)
+			});
+
+			builder.addSubcommand(command => {
+				command
+					.setName("extensions")
+					.setDescription("Consonant extensions")
+				return createOptions(command)
+			});
+
+			// builder.addSubcommand(command => {
+				// command
+					// .setName("cases")
+					// .setDescription("Cases")
+				// return createOptions(command)
+			// });
 			return builder;
 		}),
 		exec: async interaction => {
 			// const subcommand = interaction.options.get('_subcommand')?.value 
 			// TODO: there's probably a better way to do this
 			const subcommand = interaction.options['_subcommand'];
-			switch(subcommand) {
-				case "affixes":  {
-					const inverted = interaction.options.get('inverted')?.value || true;
-					const extensions = interaction.options.get('extensions')?.value || true;
-					const time = interaction.options.get('time')?.value;
-					const font = interaction.options.get('font')?.value;
-					const wordLength = interaction.options.get('group_size')?.value || 3;
-					const collaborative: boolean = interaction.options.get('collaborative')?.value || false;
-					let quizLength = interaction.options.get('length')?.value || 5;
-					if(quizLength > 50) quizLength = 50;
-					// defined a timeout for the quiz
 
-					const result = initiateQuiz(interaction, { type: subcommand, wordLength, inversions: inverted, collaborative, length: quizLength, font, time, extensions });
+			const inverted = interaction.options.get('inverted')?.value || true;
+			const extensions = interaction.options.get('extensions')?.value || true;
+			const time = interaction.options.get('time')?.value;
+			const font = interaction.options.get('font')?.value;
+			const wordLength = interaction.options.get('group_size')?.value || 3;
+			const collaborative: boolean = interaction.options.get('collaborative')?.value || false;
+			let quizLength = interaction.options.get('length')?.value || 5;
+			// defined a timeout for the quiz
 
-					if(typeof result !== 'string') {
-						// TODO: insert quiz data & embed perhaps
-						
-						await interaction.reply(`Quiz started.`);
-						try {
-							await result.activate(
-								async result => {
-									await interaction.followUp({
-										// content: `Answer: ||${result.answer}||`,
-										files: [result.image],
-									})
-								},
-								async (answer: string) => {
-									await interaction.followUp(`Too late. Answer was \`${answer}\``);
-								},
-								async (winner: User, answer: string) => {
-									await interaction.followUp(`Well done <@${winner.id}>! Answer was \`${answer}\``)
-								},
-								async (stats) => {
-									// TODO: elaborate
-									await interaction.followUp(`Quiz ended.`)
-								},
-							);
-						} catch(e) {
-							await interaction.followUp("Internal error");
-							console.log('e:', e);
-						}
-					} else {
-						// TODO: elaborate
-						await interaction.reply("You're already engaged in something. Please cancel it or wait 1m till it expires");
-					}
-					return subcommand;
+			const result = initiateQuiz(interaction, { type: subcommand, wordLength, inversions: inverted, collaborative, length: quizLength, font, time, extensions });
+
+			if(typeof result !== 'string') {
+				// TODO: insert quiz data & embed perhaps
+				
+				await interaction.reply(`Quiz started.`);
+				try {
+					await result.activate(
+						async result => {
+							await interaction.followUp({
+								// content: `Answer: ||${result.answer}||`,
+								files: [result.image],
+							})
+						},
+						async (answer: string|string[]) => {
+							await interaction.followUp(`Too late. Answer was \`${Array.isArray(answer) ? answer.join('/') : answer}\``);
+						},
+						async (winner: User, answer: string|string[]) => {
+							await interaction.followUp(`Well done <@${winner.id}>! Answer was \`${Array.isArray(answer) ? answer.join('/') : answer}\``)
+						},
+						async (stats) => {
+							// TODO: elaborate
+							await interaction.followUp(`Quiz ended.`)
+						},
+					);
+				} catch(e) {
+					await interaction.followUp("Internal error");
+					console.log('e:', e);
 				}
-				case "secondaries":  {
-					const inverted = interaction.options.get('inverted')?.value || true;
-					const extensions = interaction.options.get('extensions')?.value || true;
-					const time = interaction.options.get('time')?.value;
-					const font = interaction.options.get('font')?.value;
-					const wordLength = interaction.options.get('group_size')?.value || 3;
-					const collaborative: boolean = interaction.options.get('collaborative')?.value || false;
-					let quizLength = interaction.options.get('length')?.value || 5;
-					// defined a timeout for the quiz
-
-					const result = initiateQuiz(interaction, { type: subcommand, wordLength, inversions: inverted, collaborative, length: quizLength, font, time, extensions });
-
-					if(typeof result !== 'string') {
-						// TODO: insert quiz data & embed perhaps
-						
-						await interaction.reply(`Quiz started.`);
-						try {
-							await result.activate(
-								async result => {
-									await interaction.followUp({
-										// content: `Answer: ||${result.answer}||`,
-										files: [result.image],
-									})
-								},
-								async (answer: string) => {
-									await interaction.followUp(`Too late. Answer was \`${answer}\``);
-								},
-								async (winner: User, answer: string) => {
-									await interaction.followUp(`Well done <@${winner.id}>! Answer was \`${answer}\``)
-								},
-								async (stats) => {
-									// TODO: elaborate
-									await interaction.followUp(`Quiz ended.`)
-								},
-							);
-						} catch(e) {
-							await interaction.followUp("Internal error");
-							console.log('e:', e);
-						}
-					} else {
-						// TODO: elaborate
-						await interaction.reply("You're already engaged in something. Please cancel it or wait 1m till it expires");
-					}
-					return subcommand;
-				};
-				default: {
-					await interaction.followUp("This is not a valid subcommand");
-				};
+			} else {
+				// TODO: elaborate
+				await interaction.reply("You're already engaged in something. Please cancel it or wait 1m till it expires");
 			}
+			return subcommand;
 		}
 	},
 	{
@@ -487,7 +419,7 @@ const commands = [
 					await interaction.reply(result);
 				else
 					await interaction.reply({
-						content: `Transcript: ||${answer}||`,
+						content: `Transcript: ||${Array.isArray(answer) ? answer.join('/') : answer}||`,
 						files: [image]
 					});
 			} else {
