@@ -18,11 +18,12 @@ export function generateChar(ext: boolean = false): string {
 // export function generateVowel(slotVI: boolean | null = null): string {
 export function generateVowel(): [string, number, number] {
 	// console.log('vowels:', VOWEL_FORMS);
-	const randomType = Math.floor(Math.random() * 2) + 1;
-	const randomDegree = Math.floor(Math.random() * 10);
+	const randomType = Math.floor(Math.random() * 3) + 1;
+	const randomDegree = Math.floor(Math.random() * 11);
 	let randomVowel = '';
-	if(randomDegree === 10)
+	if(randomDegree === 10) {
 		randomVowel = 'üö'; // Ca stacking
+	}
 	else
 		randomVowel = Object.keys(VOWEL_FORMS).find(e => VOWEL_FORMS[e][0] === randomType && VOWEL_FORMS[e][1] === randomDegree);
 	return [randomVowel, randomType, randomDegree,];
@@ -89,9 +90,9 @@ export async function generateAffix(inversions: boolean, font: Font | 'random' =
 		"ļ",
 		"ļw",
 		"ļy",].some(x => x === consonantCluster)) {
-		if(generateTopChar === true) preChar = generateChar(true);
+		if(generateTopChar === true && extensions) preChar = generateChar(true);
 		else preChar = '';
-		if(generateBottomChar === true) postChar = generateChar(true);
+		if(generateBottomChar === true && extensions) postChar = generateChar(true);
 		else postChar = '';
 
 		const secondaryChar = generateChar();
@@ -131,7 +132,8 @@ export async function generateAffix(inversions: boolean, font: Font | 'random' =
 	try {
 		return {
 			image: await textToPng(fontChars, font),
-			answer: vowelType === 3 ? [prettifiedChars, prettifiedCharsAlt,] : prettifiedChars
+			// if type 3, and vowel not one of exceptions, give both vowel and alternate form
+			answer: vowelType === 3 && !['üo', 'eë', 'üö'].some(x => x === vowel) ? [prettifiedChars, prettifiedCharsAlt,] : prettifiedChars
 		};
 	} catch(e) {
 		throw e;
