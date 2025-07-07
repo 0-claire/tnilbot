@@ -201,7 +201,6 @@ export class Quiz implements QuizOptions {
 			}
 			if(evaluation === true) {
 				this.clearQuestionTimeout();
-				this.clearInteractionTimeout();
 				this.lastQuestion.winner = message.author;
 				return true;
 			}
@@ -214,6 +213,7 @@ export class Quiz implements QuizOptions {
 			return;
 
 		this.attemptQueue.push(message);
+		this.clearInteractionTimeout();
 
 		if(this.processingAttempt)
 			return;
