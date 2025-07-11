@@ -71,6 +71,11 @@ const commands = [
 					{ name: "handwritten", value: "flow" }
 				)
 			)
+			.addBooleanOption(option => 
+			  option
+				.setName("spacing")
+				.setDescription("attempt to insert spaces between words")
+			)
 			// .addMentionableOption(option => 
 				// option
 				// .setName("reply")
@@ -81,10 +86,11 @@ const commands = [
 			const text = interaction.options.get('text')?.value
 			const user = interaction.options.get('mention')?.value
 			const font = interaction.options.get('font')?.value;
+			const spacing = interaction.options.get('spacing')?.value;
 			console.log('user option:', user);
 			var result: AttachmentBuilder | string | null;
 			try {
-				result = await render(text, font);
+				result = await render(text, font, spacing);
 			} catch(e) {
 					result = null;
 				if(e.name === 'PARSING_ERROR') {

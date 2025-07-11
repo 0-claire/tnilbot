@@ -6,6 +6,7 @@ import { Font, sleep, } from './util.js';
 import {
 	generateSecondary, GenerateResult, GeneratedQuestion, generateAffix, generateExtensions,
 } from './generator.js';
+import { sanitizeInput } from './transform.js';
 
 export type UserID = Snowflake & string;
 export type ChannelID = Snowflake & string;
@@ -69,9 +70,11 @@ export class Quiz implements QuizOptions {
 	};
 	uninteractedQuestions: number;
 	processingAttempt: boolean;
+	questionInterim: boolean; // in the space between questions?
 
 	constructor(interaction: CommandInteraction, settings: QuizOptions) {
 		this.active = false;
+		this.collaborative = settings.collaborative;
 		this.interaction = interaction;
 		this.settings = settings;
 		this.type = settings.type;
@@ -141,6 +144,7 @@ export class Quiz implements QuizOptions {
 	}
 
 	private async awaitInterim() {
+		this.questionInterim = true;
 		await sleep(config.quizzes.answerQuestionIntervalMs);
 		return;
 	}
@@ -156,9 +160,12 @@ export class Quiz implements QuizOptions {
 				break;
 			else if(this.ending)
 				break;
+			else if(this.questionInterim)
+				break;
 			else {
 				const message = this.attemptQueue.shift();
-				if(await this.validateAttempt(message)) {
+				const validation = await this.validateAttempt(message);
+				if(validation === true) {
 					// TODO: augment stats
 					if(this.ending)
 						return;
@@ -167,6 +174,7 @@ export class Quiz implements QuizOptions {
 					await this.awaitInterim();
 					this.clearQuestionTimeout();
 					await this.nextQuestion();
+				} if(validation === -1) {
 				} else 
 					await message.react('❌');
 				
@@ -177,15 +185,15 @@ export class Quiz implements QuizOptions {
 		this.processingAttempt = false;
 	};
 
-	private async validateAttempt(message: Message): Promise<boolean> {
+	private async validateAttempt(message: Message): Promise<boolean | -1> {
 
-		const attempt: string = message.content;
+		const attempt: string = sanitizeInput(message.content);
 		// TODO: perform substitutions foor chars where desired
 		if(message.content.startsWith('$')) {
 			// validate against users starting the quiz or part of the collab
 			if(message.content === '$cancel') {
 				await this.end('cancel received');
-				return false;
+				return -1;
 				// allow skip too
 			} else
 				return false;
@@ -296,6 +304,7 @@ export class Quiz implements QuizOptions {
 			return;
 
 		this.processingAttempt = false;
+		this.questionInterim = false;
 		this.setQuestionTimer();
 
 		// if the last interaction timer's been cleared, set a new one
@@ -305,7 +314,7 @@ export class Quiz implements QuizOptions {
 
 	private async end(reason: string) {
 		console.log('ending, reason:', { reason: reason, trace: '' });
-		if(this.ending)
+		if(this.ending) // don't run this function twice
 			return;
 		this.ending = true;
 		// remove this quiz from quizzes
@@ -322,10 +331,12 @@ export class Quiz implements QuizOptions {
 			quizzes[this.interaction.channelId].publicQuiz = null;
 		} else
 			quizzes[this.interaction.channelId].privateQuizzes.delete(this.interaction.commandId);
+		console.log('destroy complete. quizzes:', quizzes);
 	}
 
 	addEngagement(engagement: Engagement) {
 		this.engagements.push(engagement);
+		console.log('adding engagement. engagements:', this.engagements);
 	}
 
 	// get interaction channel
@@ -386,7 +397,9 @@ export function initiateQuiz(interaction: CommandInteraction, options: QuizOptio
 		}
 	} else {
 		const quiz = new Quiz(interaction, options);
+		console.log('adding quiz. quizzes:', quizzes);
 		quizzes[channelId].privateQuizzes.set(interaction.commandId, quiz);
+		console.log('adding quiz. quizzes:', quizzes);
 		const engagement = new Engagement(interaction, 'quiz'); 
 		engagedUsers[userId] = engagement;
 		quiz.addEngagement(engagement);
@@ -395,5 +408,7 @@ export function initiateQuiz(interaction: CommandInteraction, options: QuizOptio
 }
 
 export function destroyEngagement(engagement: Engagement) {
+	console.log('deleting engagement:', engagement);
 	delete engagedUsers[engagement.userId];
+	console.log('engagements:', engagedUsers);
 }
