@@ -496,7 +496,6 @@ client.on(Events.MessageCreate, async message => {
 					return
 				}
 				const command = array[0].replace(config.prefix, '');
-				var text = '';
 				var ping = false;
 				var handwritten = false;
 				var commandFound = false;
@@ -542,8 +541,10 @@ client.on(Events.MessageCreate, async message => {
 								const embed = repliedMessage.embeds?.[0]
 								const match = embed.footer.text.match(/User ID:\s*(\d{17,})/)
 								originatingUserId = match ? match[1] : null
+							} else if(repliedMessage.author.bot === false && repliedMessage.author.id !== message.author.id) {
+								originatingUserId = repliedMessage.author.id
 							}
-							await repliedMessage.reply(createUserEmbed(message.author, result, ping && originatingUserId ? originatingUserId : null));
+							await repliedMessage.reply(createUserEmbed(message.author, result, content, ping && originatingUserId ? originatingUserId : null));
 							try {
 								await message.delete()
 							} catch(e) {
@@ -596,7 +597,7 @@ async function passMessage(message: Message): Promise<boolean> {
 	}
 }
 
-function createUserEmbed(user: User, image: AttachmentBuilder, mention: null | Snowflake = null) {
+function createUserEmbed(user: User, image: AttachmentBuilder, text: string, mention: null | Snowflake = null) {
   return {
     content: mention ? `<@${mention}>` : null, // ping if desired
     embeds: [
@@ -606,6 +607,7 @@ function createUserEmbed(user: User, image: AttachmentBuilder, mention: null | S
           iconURL: user.displayAvatarURL({ size: 64 }),
           // url: `https://discord.com/users/${user.id}` // Makes username clickable
         })
+		.setTitle(`||${text}||`)
         // .setImage(imageUrl) // Big wide image here
 		.setImage(`attachment://image.png`)
         .setColor(0x5865F2) // Discord blurple
