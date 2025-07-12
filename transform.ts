@@ -131,6 +131,7 @@ function fillDefaultsTertiary(char) {
 
 function fillDefaultsQuaternary(char) {
 	// contents: case, illocution, validation, mood
+	console.log('quat:', char);
 	let bar = "|";
 	if(char.value) {
 		const ext = CASE_ILLOCUTION_VALIDATION[char.value];
@@ -147,11 +148,19 @@ function fillDefaultsQuaternary(char) {
 		bar += `^${MOOD[char.mood]}`;
 	if(char.caseScope && CASE_SCOPE[char.caseScope])
 		bar += `_${CASE_SCOPE[char.caseScope]}`;
-	if(char.isSlotVIIAffix) {
-		if(char.isInverse)
-			bar += `_aó`
-		else
-			bar += `_aò`;
+	if(typeof char.type === 'number') {
+		if(char.isSlotVIIAffix) {
+			if(char.isInverse)
+				bar += `_aó`
+			else
+				bar += `_aò`;
+		} else {
+			if(char.isInverse)
+				bar += `_ó`
+			else
+				bar += `_ò`;
+		}
+
 		switch(char.type) {
 			case 2:
 				bar += `^a`;
@@ -168,7 +177,7 @@ function fillDefaultsQuaternary(char) {
 	// this check doesn't elide quats for Cr root formatives with default values besides case or ill+val
 	// TODO: check for diacritics such as rps, concat, etc
 	// TODO: we may need a more robus processor that can identify formatives and elide chars from them and apply the information as diacritics to previous chars, unless zsnout allows for such through a parameter
-	if((char.value === "OBS" || char.value === 'THM') && char.mood === undefined && char.caseScope === undefined && !char.isSlotVIIAffix)
+	if(typeof char.type !== 'number' && (char.value === "OBS" || char.value === 'THM') && char.mood === undefined && char.caseScope === undefined && !char.isSlotVIIAffix)
 		return "";
 	// if(char.mood === undefined && char.caseScope === undefined && !char.belongsToReferential && !char.belongsToCsFormative)
 		// return "";
