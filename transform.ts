@@ -1,7 +1,7 @@
 import { AttachmentBuilder } from 'discord.js'
 import text2png from 'text2png';
 import { Result, textToScript } from '@zsnout/ithkuil/script/index.js'
-import { PRIMARY_CORES, PRIMARY_TOP_LEFT, PRIMARY_BOTTOM_RIGHT, PRIMARY_TOP_RIGHT, PRIMARY_BOTTOM_LEFT, DIACRITICS, TERTIARY_VALENCES, TERTIARY_ASPECTS_PHASES_EFFECTS, LEVELS, CASE_ILLOCUTION_VALIDATION, CASE_SCOPE, MOOD, REGISTER, BIASES, } from './textConversionInformation.js';
+import { PRIMARY_CORES, PRIMARY_TOP_LEFT, PRIMARY_BOTTOM_RIGHT, PRIMARY_TOP_RIGHT, PRIMARY_BOTTOM_LEFT, DIACRITICS, TERTIARY_VALENCES, TERTIARY_ASPECTS_PHASES_EFFECTS, LEVELS, CASE_ILLOCUTION_VALIDATION, CASE_SCOPE, MOOD, REGISTER, BIASES, PRIMARY_CONTEXTS, } from './textConversionInformation.js';
 import config from './config.js'
 import { Font } from './util.js'
 
@@ -34,6 +34,8 @@ function fillDefaultsPrimary(char) {
 	const topRight = PRIMARY_TOP_RIGHT[char.essence || "NRM"][char.affiliation || "CSL"];
 	const plexity = char.configuration || "PX";
 	const bottomLeft = PRIMARY_BOTTOM_LEFT[plexity.substring(plexity.length-2)];
+	const superposed = PRIMARY_CONTEXTS[char.context];
+
 	if(topLeft)
 		core += `^${topLeft}`;
 	// console.log('bottomright:', bottomRight);
@@ -43,6 +45,8 @@ function fillDefaultsPrimary(char) {
 		core += `>${topRight}`;
 	if(bottomLeft)
 		core += `<${bottomLeft}`;
+	if(superposed)
+		core += `^^${superposed}`;
 	if(char.bottom) {
 		if(bottomRight)
 			core += "_";
@@ -162,6 +166,7 @@ function fillDefaultsQuaternary(char) {
 	// ellision; only elide Cr root verbal quats with ASR and default values besides validation, and nominal quats with default values that are not affixes.
 	// Never elide referential quaternaries, and don't elide Cs root or personal reference root quaternaries with non-OBS validation or non-THM case as they can't be shown with diacritics
 	// this check doesn't elide quats for Cr root formatives with default values besides case or ill+val
+	// TODO: check for diacritics such as rps, concat, etc
 	// TODO: we may need a more robus processor that can identify formatives and elide chars from them and apply the information as diacritics to previous chars, unless zsnout allows for such through a parameter
 	if((char.value === "OBS" || char.value === 'THM') && char.mood === undefined && char.caseScope === undefined && !char.isSlotVIIAffix)
 		return "";
@@ -264,7 +269,7 @@ function parserObjToFontChars() {
 }
 
 
-export async function render(text, font, spacing: boolean = true) {
+export async function render(text, font, spacing: boolean = config.rendering.spaceBetweenWords) {
 	let parserObjects: Result<any>[];
 
 	if(spacing === true) {

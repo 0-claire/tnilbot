@@ -5,7 +5,8 @@ import { Font, } from './util.js';
 import { textToPng, } from './transform.js';
 import config from './config.js';
 
-export function generateChar(ext: boolean = false): string {
+
+export function generateChar(ext: boolean = false, inversions: boolean = false): string {
 	const chars = ext !== true ? 'bcčçdḑfghjklļmnňprřsštţvxzžż' : 'bcčçdḑfghjklļmnňprřsštţvwxyzžż'; // wy only exist as extensions
 	const length = chars.length;
 	const rand = Math.random();
@@ -113,27 +114,41 @@ export async function generateAffix(inversions: boolean, font: Font | 'random' =
 	const fontChars = `${secondaryCharWithRotation}^${preChar}^${AFFIX_TYPE_DIACRITICS[vowelType -1]}_${postChar}_${AFFIX_DIACRITICS[vowelDegree]}`;
 	let prettifiedChars = '';
 	let prettifiedCharsAlt = '';
+	let prettifiedCharsPrettyGeminate = '';
+	let prettifiedCharsAltPrettyGeminate = '';
+	const preCharPrettyGeminate = preChar === '=' ? secondaryChar :'';
+	const postCharPrettyGeminate = postChar === '=' ? secondaryChar :'';
 
 	if(slotV) {
 		prettifiedChars = `${preChar}${secondaryChar}${postChar}${vowel}`;
 		prettifiedCharsAlt = `${preChar}${secondaryChar}${postChar}${ALT_VOWELS[vowel]}`;
-	}
-	// word = `ta${preChar}${secondaryChar}${postChar}${vowel}talla`
-	 else {
+		prettifiedCharsPrettyGeminate = `${preCharPrettyGeminate}${secondaryChar}${postCharPrettyGeminate}${vowel}`;
+		prettifiedCharsAltPrettyGeminate = `${preCharPrettyGeminate}${secondaryChar}${postCharPrettyGeminate}${ALT_VOWELS[vowel]}`;
+	} else {
 		prettifiedChars = `${vowel}${preChar}${secondaryChar}${postChar}`;
 		prettifiedCharsAlt = `${ALT_VOWELS[vowel]}${preChar}${secondaryChar}${postChar}`;
+		prettifiedCharsPrettyGeminate = `${vowel}${preCharPrettyGeminate}${secondaryChar}${postCharPrettyGeminate}`;
+		prettifiedCharsAltPrettyGeminate = `${ALT_VOWELS[vowel]}${preCharPrettyGeminate}${secondaryChar}${postCharPrettyGeminate}`;
 	 }
-	// word = `tal${plainChars}at`
 	
-	// return {
-	// fontChars,
-	// prettifiedChars
-	// }
+	const answer = [];
+
+	if(vowelType === 3 && !['üo', 'eë', 'üö'].some(x => x === vowel)) {
+		[prettifiedChars, prettifiedCharsAlt].forEach(x => answer.push(x))
+		if(prettifiedCharsAltPrettyGeminate !== prettifiedCharsAlt)
+			answer.push(prettifiedCharsAltPrettyGeminate)
+	} else
+		answer.push(prettifiedChars);
+
+	if(prettifiedCharsPrettyGeminate !== prettifiedChars)
+		answer.push(prettifiedCharsPrettyGeminate)
+	console.log('answer:', answer);
+
 	try {
 		return {
 			image: await textToPng(fontChars, font),
 			// if type 3, and vowel not one of exceptions, give both vowel and alternate form
-			answer: vowelType === 3 && !['üo', 'eë', 'üö'].some(x => x === vowel) ? [prettifiedChars, prettifiedCharsAlt,] : prettifiedChars
+			answer,
 		};
 	} catch(e) {
 		throw e;
@@ -152,14 +167,18 @@ export async function generateExtensions(settings: {
 
 	const secondaryChar = generateChar();
 	let preChar = generateChar(true);
-	if(preChar === secondaryChar) preChar = '=';
+	let scriptPreChar = preChar
+	// if(preChar === secondaryChar) preChar = '=';
+	if(preChar === secondaryChar) scriptPreChar = '=';
 	let postChar = generateChar(true);
-	if(postChar === secondaryChar) postChar = '=';
+	let scriptPostChar = postChar
+	// if(postChar === secondaryChar) postChar = '=';
+	if(postChar === secondaryChar) scriptPostChar = '=';
 	let apostrophe = '';
 	if(inversions === true || (config.quizzes.inversionByDefault === true && inversions !== false))
 		apostrophe += `${Math.random() > 0.5 ? "'" : ''}`;
 	const secondaryCharWithRotation = `${secondaryChar}${apostrophe}`; 
-	const randomChars = `${secondaryCharWithRotation}^${preChar}_${postChar}`;
+	const randomChars = `${secondaryCharWithRotation}^${scriptPreChar}_${scriptPostChar}`;
 	const prettifiedChars = `${preChar}${secondaryCharWithRotation}${postChar}`;
 
 	return {

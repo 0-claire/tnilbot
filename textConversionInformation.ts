@@ -530,3 +530,10 @@ export const AFFIX_TYPE_DIACRITICS = [
 	'a',
 	'ä',
 ];
+
+export const PRIMARY_CONTEXTS = {
+	EXS: null,
+	FNC: 'a',
+	RPS: 'ä',
+	AMG: 'i',
+};
