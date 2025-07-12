@@ -544,6 +544,11 @@ client.on(Events.MessageCreate, async message => {
 								originatingUserId = match ? match[1] : null
 							}
 							await repliedMessage.reply(createUserEmbed(message.author, result, ping && originatingUserId ? originatingUserId : null));
+							try {
+								await message.delete()
+							} catch(e) {
+								console.log("Couldn't delete message");
+							}
 						}
 					} else {
 						// TODO: make ephemeral
