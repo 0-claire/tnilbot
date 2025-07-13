@@ -301,6 +301,11 @@ const commands = [
 			)
 			.addBooleanOption(option =>
 				option
+					.setName("ignore_missing_apostrophes")
+					.setDescription("Ignore missing apostrophes for flipped chars")
+			)
+			.addBooleanOption(option =>
+				option
 					.setName("collaborative")
 					.setDescription("Allow others to join in")
 			)
@@ -357,9 +362,10 @@ const commands = [
 			const wordLength = interaction.options.get('group_size')?.value || 3;
 			const collaborative: boolean = interaction.options.get('collaborative')?.value || false;
 			let quizLength = interaction.options.get('length')?.value || 5;
+			let ignoreMissingApostrophes = interaction.options.get('ignore_missing_apostrophes')?.value || false;
 			// defined a timeout for the quiz
 
-			const result = initiateQuiz(interaction, { type: subcommand, wordLength, inversions: inverted, collaborative, length: quizLength, font, time, extensions });
+			const result = initiateQuiz(interaction, { type: subcommand, wordLength, inversions: inverted, collaborative, length: quizLength, font, time, extensions, ignoreMissingApostrophes });
 
 			if(typeof result !== 'string') {
 				// TODO: insert quiz data & embed perhaps

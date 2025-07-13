@@ -22,6 +22,7 @@ export interface QuizOptions {
 	collaborative: boolean;
 	length: number;
 	font: Font | 'random';
+	ignoreMissingApostrophes: boolean;
 }
 
 export class Quiz implements QuizOptions {
@@ -35,6 +36,7 @@ export class Quiz implements QuizOptions {
 	font: Font | 'random';
 	type: QuizType;
 	timeout: number;
+	ignoreMissingApostrophes: boolean;
 
 	settings: QuizOptions;
 	interaction: CommandInteraction;
