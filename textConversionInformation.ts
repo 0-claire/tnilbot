@@ -184,91 +184,7 @@ export const LEVELS = {
 	"MAX": "ä",
 };
 
-export const CASE_ILLOCUTION_VALIDATION = {
-	// 1 Transrelative
-	THM: { top: undefined, bottom: undefined }, 
-	INS: { top: undefined, bottom: 'd' }, 
-	ABS: { top: undefined, bottom: 'š' }, 
-	AFF: { top: undefined, bottom: 'g' }, 
-	STM: { top: undefined, bottom: 'p' }, 
-	EFF: { top: undefined, bottom: 't' }, 
-	ERG: { top: undefined, bottom: 'k' }, 
-	DAT: { top: undefined, bottom: 'b' }, 
-	IND: { top: undefined, bottom: 'm' }, 
-
-	// 2 Appositive
-	POS: { top: 'd', bottom: undefined }, 
-	PRP: { top: 'd', bottom: 'd' }, 
-	GEN: { top: 'd', bottom: 'š' }, 
-	ATT: { top: 'd', bottom: 'g' }, 
-	PDC: { top: 'd', bottom: 'p' }, 
-	ITP: { top: 'd', bottom: 't' }, 
-	OGN: { top: 'd', bottom: 'k' }, 
-	IDP: { top: 'd', bottom: 'b' }, 
-	PAR: { top: 'd', bottom: 'm' }, 
-
-	// 3 Associative
-	APL: { top: 'š', bottom: undefined }, 
-	PUR: { top: 'š', bottom: 'd' }, 
-	TRA: { top: 'š', bottom: 'š' }, 
-	DFR: { top: 'š', bottom: 'g' }, 
-	CRS: { top: 'š', bottom: 'p' }, 
-	TSP: { top: 'š', bottom: 't' }, 
-	CMM: { top: 'š', bottom: 'k' }, 
-	CMP: { top: 'š', bottom: 'b' }, 
-	CSD: { top: 'š', bottom: 'm' }, 
-
-	// 4 Adverbial
-	FUN: { top: 'g', bottom: undefined }, 
-	TFM: { top: 'g', bottom: 'd' }, 
-	CLA: { top: 'g', bottom: 'š' }, 
-	RSL: { top: 'g', bottom: 'g' }, 
-	CSM: { top: 'g', bottom: 'p' }, 
-	CON: { top: 'g', bottom: 't' }, 
-	AVR: { top: 'g', bottom: 'k' }, 
-	CVS: { top: 'g', bottom: 'b' }, 
-	SIT: { top: 'g', bottom: 'm' }, 
-
-	// 5 Relational
-	PRN: { top: 'p', bottom: undefined }, 
-	DSP: { top: 'p', bottom: 'd' }, 
-	COR: { top: 'p', bottom: 'š' }, 
-	CPS: { top: 'p', bottom: 'g' }, 
-	COM: { top: 'p', bottom: 'p' }, 
-	UTL: { top: 'p', bottom: 't' }, 
-	PRD: { top: 'p', bottom: 'k' }, 
-	RLT: { top: 'p', bottom: 'm' }, 
-
-	// 6 Affinitive
-	ACT: { top: 't', bottom: undefined }, 
-	ASI: { top: 't', bottom: 'd' }, 
-	ESS: { top: 't', bottom: 'š' }, 
-	TRM: { top: 't', bottom: 'g' }, 
-	SEL: { top: 't', bottom: 'p' }, 
-	CFM: { top: 't', bottom: 't' }, 
-	DEP: { top: 't', bottom: 'k' }, 
-	VOC: { top: 't', bottom: 'm' }, 
-
-	// 7 ST-1
-	LOC: { top: 'k', bottom: undefined }, 
-	ATD: { top: 'k', bottom: 'd' }, 
-	ALL: { top: 'k', bottom: 'š' }, 
-	ABL: { top: 'k', bottom: 'g' }, 
-	ORI: { top: 'k', bottom: 'p' }, 
-	IRL: { top: 'k', bottom: 't' }, 
-	INV: { top: 'k', bottom: 'k' }, 
-	NAV: { top: 'k', bottom: 'm' }, 
-
-	// 8 ST-2
-	CNR: { top: 'b', bottom: undefined }, 
-	ASS: { top: 'b', bottom: 'd' }, 
-	PER: { top: 'b', bottom: 'š' }, 
-	PRO: { top: 'b', bottom: 'g' }, 
-	PCV: { top: 'b', bottom: 'p' }, 
-	PCR: { top: 'b', bottom: 't' }, 
-	ELP: { top: 'b', bottom: 'k' }, 
-	PLM: { top: 'b', bottom: 'm' }, 
-
+export const ILLOCUTION = {
 	// TODO: test ASR
 	ASR: '^s_s',
 	DIR: '^ḑ',
@@ -279,7 +195,9 @@ export const CASE_ILLOCUTION_VALIDATION = {
 	POT: '^x',
 	HOR: '^n',
 	CNJ: '^z',
+}
 
+export const VALIDATION = {
 	OBS: '^s_s',
 	REC: '^s_ḑ',
 	PUP: '^s_f',
@@ -289,6 +207,123 @@ export const CASE_ILLOCUTION_VALIDATION = {
 	ITU: '^s_x',
 	INF: '^s_n',
 	USP: '^s_z',
+}
+
+export const CASE_TO_SEQUENCE = {
+	null: 1,
+	d: 2,
+	š: 3,
+	g: 4,
+	p: 5,
+	t: 6,
+	k: 7,
+	b: 8,
+	m: 9,
+}
+
+export const SEQUENCE_TO_CASE = {
+	1: null,
+	2: 'd',
+	3: 'š',
+	4: 'g',
+	5: 'p',
+	6: 't',
+	7: 'k',
+	8: 'b',
+	9: 'm',
+}
+
+export const CASE = {
+	// 1 Transrelative
+	THM: { series: 1, top: undefined, bottom: undefined }, 
+	INS: { series: 1, top: undefined, bottom: 'd' }, 
+	ABS: { series: 1, top: undefined, bottom: 'š' }, 
+	AFF: { series: 1, top: undefined, bottom: 'g' }, 
+	STM: { series: 1, top: undefined, bottom: 'p' }, 
+	EFF: { series: 1, top: undefined, bottom: 't' }, 
+	ERG: { series: 1, top: undefined, bottom: 'k' }, 
+	DAT: { series: 1, top: undefined, bottom: 'b' }, 
+	IND: { series: 1, top: undefined, bottom: 'm' }, 
+
+	// 2 Appositive
+	POS: { series: 2, top: 'd', bottom: undefined }, 
+	PRP: { series: 2, top: 'd', bottom: 'd' }, 
+	GEN: { series: 2, top: 'd', bottom: 'š' }, 
+	ATT: { series: 2, top: 'd', bottom: 'g' }, 
+	PDC: { series: 2, top: 'd', bottom: 'p' }, 
+	ITP: { series: 2, top: 'd', bottom: 't' }, 
+	OGN: { series: 2, top: 'd', bottom: 'k' }, 
+	IDP: { series: 2, top: 'd', bottom: 'b' }, 
+	PAR: { series: 2, top: 'd', bottom: 'm' }, 
+
+	// 3 Associative
+	APL: { series: 3, top: 'š', bottom: undefined }, 
+	PUR: { series: 3, top: 'š', bottom: 'd' }, 
+	TRA: { series: 3, top: 'š', bottom: 'š' }, 
+	DFR: { series: 3, top: 'š', bottom: 'g' }, 
+	CRS: { series: 3, top: 'š', bottom: 'p' }, 
+	TSP: { series: 3, top: 'š', bottom: 't' }, 
+	CMM: { series: 3, top: 'š', bottom: 'k' }, 
+	CMP: { series: 3, top: 'š', bottom: 'b' }, 
+	CSD: { series: 3, top: 'š', bottom: 'm' }, 
+
+	// 4 Adverbial
+	FUN: { series: 4, top: 'g', bottom: undefined }, 
+	TFM: { series: 4, top: 'g', bottom: 'd' }, 
+	CLA: { series: 4, top: 'g', bottom: 'š' }, 
+	RSL: { series: 4, top: 'g', bottom: 'g' }, 
+	CSM: { series: 4, top: 'g', bottom: 'p' }, 
+	CON: { series: 4, top: 'g', bottom: 't' }, 
+	AVR: { series: 4, top: 'g', bottom: 'k' }, 
+	CVS: { series: 4, top: 'g', bottom: 'b' }, 
+	SIT: { series: 4, top: 'g', bottom: 'm' }, 
+
+	// 5 Relational
+	PRN: { series: 5, top: 'p', bottom: undefined }, 
+	DSP: { series: 5, top: 'p', bottom: 'd' }, 
+	COR: { series: 5, top: 'p', bottom: 'š' }, 
+	CPS: { series: 5, top: 'p', bottom: 'g' }, 
+	COM: { series: 5, top: 'p', bottom: 'p' }, 
+	UTL: { series: 5, top: 'p', bottom: 't' }, 
+	PRD: { series: 5, top: 'p', bottom: 'k' }, 
+	RLT: { series: 5, top: 'p', bottom: 'm' }, 
+
+	// 6 Affinitive
+	ACT: { series: 6, top: 't', bottom: undefined }, 
+	ASI: { series: 6, top: 't', bottom: 'd' }, 
+	ESS: { series: 6, top: 't', bottom: 'š' }, 
+	TRM: { series: 6, top: 't', bottom: 'g' }, 
+	SEL: { series: 6, top: 't', bottom: 'p' }, 
+	CFM: { series: 6, top: 't', bottom: 't' }, 
+	DEP: { series: 6, top: 't', bottom: 'k' }, 
+	VOC: { series: 6, top: 't', bottom: 'm' }, 
+
+	// 7 ST-1
+	LOC: { series: 7, top: 'k', bottom: undefined }, 
+	ATD: { series: 7, top: 'k', bottom: 'd' }, 
+	ALL: { series: 7, top: 'k', bottom: 'š' }, 
+	ABL: { series: 7, top: 'k', bottom: 'g' }, 
+	ORI: { series: 7, top: 'k', bottom: 'p' }, 
+	IRL: { series: 7, top: 'k', bottom: 't' }, 
+	INV: { series: 7, top: 'k', bottom: 'k' }, 
+	NAV: { series: 7, top: 'k', bottom: 'm' }, 
+
+	// 8 ST-2
+	CNR: { series: 8, top: 'b', bottom: undefined }, 
+	ASS: { series: 8, top: 'b', bottom: 'd' }, 
+	PER: { series: 8, top: 'b', bottom: 'š' }, 
+	PRO: { series: 8, top: 'b', bottom: 'g' }, 
+	PCV: { series: 8, top: 'b', bottom: 'p' }, 
+	PCR: { series: 8, top: 'b', bottom: 't' }, 
+	ELP: { series: 8, top: 'b', bottom: 'k' }, 
+	PLM: { series: 8, top: 'b', bottom: 'm' }, 
+
+}
+
+export const CASE_ILLOCUTION_VALIDATION = {
+	...CASE,
+	...ILLOCUTION,
+	...VALIDATION,
 };
 
 // export const VALIDATIONS = [
@@ -434,58 +469,62 @@ export const BIASES = {
   // f
 };         
 
-export const VOWEL_FORMS: { [key: string]: [1|2|3, 1|2|3|4|5|6|7|8|9|0] } = {
-  ae: [1, 0],
-  a: [1, 1],
-  ä: [1, 2],
-  e: [1, 3],
-  i: [1, 4],
-  ëi: [1, 5],
-  ö: [1, 6],
-  o: [1, 7],
-  ü: [1, 8],
-  u: [1, 9],
+export const Vx_VOWEL_FORMS: { [key: string]: [1|2|3, 1|2|3|4|5|6|7|8|9|0] } = {
+	ae: [1, 0],
+	a: [1, 1],
+	ä: [1, 2],
+	e: [1, 3],
+	i: [1, 4],
+	ëi: [1, 5],
+	ö: [1, 6],
+	o: [1, 7],
+	ü: [1, 8],
+	u: [1, 9],
+	
+	ea: [2, 0],
+	ai: [2, 1],
+	au: [2, 2],
+	ei: [2, 3],
+	eu: [2, 4],
+	ëu: [2, 5],
+	ou: [2, 6],
+	oi: [2, 7],
+	iu: [2, 8],
+	ui: [2, 9],
+	
+	üo: [3, 0],
+	ia: [3, 1],
+	uä: [3, 1],
+	ie: [3, 2],
+	uë: [3, 2],
+	io: [3, 3],
+	üä: [3, 3],
+	iö: [3, 4],
+	üë: [3, 4],
+	eë: [3, 5],
+	uö: [3, 6],
+	öë: [3, 6],
+	uo: [3, 7],
+	öä: [3, 7],
+	ue: [3, 8],
+	ië: [3, 8],
+	ua: [3, 9],
+	iä: [3, 9],
+}
 
-  ea: [2, 0],
-  ai: [2, 1],
-  au: [2, 2],
-  ei: [2, 3],
-  eu: [2, 4],
-  ëu: [2, 5],
-  ou: [2, 6],
-  oi: [2, 7],
-  iu: [2, 8],
-  ui: [2, 9],
+export const VOWEL_FORMS: { [key: string]: [1|2|3|4, 1|2|3|4|5|6|7|8|9|0] } = {
+	...Vx_VOWEL_FORMS,
 
-  üo: [3, 0],
-  ia: [3, 1],
-  uä: [3, 1],
-  ie: [3, 2],
-  uë: [3, 2],
-  io: [3, 3],
-  üä: [3, 3],
-  iö: [3, 4],
-  üë: [3, 4],
-  eë: [3, 5],
-  uö: [3, 6],
-  öë: [3, 6],
-  uo: [3, 7],
-  öä: [3, 7],
-  ue: [3, 8],
-  ië: [3, 8],
-  ua: [3, 9],
-  iä: [3, 9],
-
-  // üö: [4, 0],
-  // ao: [4, 1],
-  // aö: [4, 2],
-  // eo: [4, 3],
-  // eö: [4, 4],
-  // oë: [4, 5],
-  // öe: [4, 6],
-  // oe: [4, 7],
-  // öa: [4, 8],
-  // oa: [4, 9],
+	üö: [4, 0],
+	ao: [4, 1],
+	aö: [4, 2],
+	eo: [4, 3],
+	eö: [4, 4],
+	oë: [4, 5],
+	öe: [4, 6],
+	oe: [4, 7],
+	öa: [4, 8],
+	oa: [4, 9],
 };
 
 export const ALT_VOWELS = {

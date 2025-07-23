@@ -1,21 +1,23 @@
-import { AttachmentBuilder } from 'discord.js'
+import { AttachmentBuilder, } from 'discord.js';
 import text2png from 'text2png';
-import { Result, textToScript } from '@zsnout/ithkuil/script/index.js'
-import { PRIMARY_CORES, PRIMARY_TOP_LEFT, PRIMARY_BOTTOM_RIGHT, PRIMARY_TOP_RIGHT, PRIMARY_BOTTOM_LEFT, DIACRITICS, TERTIARY_VALENCES, TERTIARY_ASPECTS_PHASES_EFFECTS, LEVELS, CASE_ILLOCUTION_VALIDATION, CASE_SCOPE, MOOD, REGISTER, BIASES, PRIMARY_CONTEXTS, } from './textConversionInformation.js';
-import config from './config.js'
-import { Font } from './util.js'
+import { Result, textToScript, } from '@zsnout/ithkuil/script/index.js';
+import {
+	PRIMARY_CORES, PRIMARY_TOP_LEFT, PRIMARY_BOTTOM_RIGHT, PRIMARY_TOP_RIGHT, PRIMARY_BOTTOM_LEFT, DIACRITICS, TERTIARY_VALENCES, TERTIARY_ASPECTS_PHASES_EFFECTS, LEVELS, CASE_ILLOCUTION_VALIDATION, CASE_SCOPE, MOOD, REGISTER, BIASES, PRIMARY_CONTEXTS, 
+} from './textConversionInformation.js';
+import config from './config.js';
+import { Font, } from './util.js';
 
 type CharType =  -1|1|2|3|4|5|6|7;
 
 function getCharType(chr): CharType {
 
-	if(['stem', 'specification', 'context'].some(p => chr.hasOwnProperty(p)))
+	if(['stem', 'specification', 'context',].some(p => chr.hasOwnProperty(p)))
 		return 1;
 	else if(chr.core)
 		return 2;
 	else if(typeof chr.value === 'string')
 		return 4;
-	else if(['absoluteLevel', 'valence', 'relativeLevel'].some(p => chr.hasOwnProperty(p)))
+	else if(['absoluteLevel', 'valence', 'relativeLevel',].some(p => chr.hasOwnProperty(p)))
 		return 3;
 	else if(chr.bias) // bias
 		return 5;
@@ -61,23 +63,23 @@ function fillDefaultsPrimary(char) {
 
 function specialMarkersToCharacters(name) {
 	switch(name) {
-		case "CORE_GEMINATE": return "=";
-		case "EXTENSION_GEMINATE": return "≈";
-		case "STANDARD_PLACEHOLDER": return "}";
-		case "DOT": return "a";
-		case "HORIZ_BAR": return "ä";
-		case "CURVE_TO_LEFT": return "ò";
-		case "CURVE_TO_RIGHT": return "ó";
-		case "HORIZ_WITH_BOTTOM_LINE": return "e";
-		case "HORIZ_WITH_TOP_LINE": return "ë";
-		case "CURVE_TO_TOP": return "o";
-		case "CURVE_TO_BOTTOM": return "ö";
-		case "VERT_WITH_LEFT_LINE": return "ü";
-		case "VERT_WITH_RIGHT_LINE": return "u";
-		case "DIAG_BAR": return "i";
-		case "VERT_BAR": return "ï";
-		case "ALPHABETIC_PLACEHOLDER": return "{";
-		default: return name;
+	case "CORE_GEMINATE": return "=";
+	case "EXTENSION_GEMINATE": return "≈";
+	case "STANDARD_PLACEHOLDER": return "}";
+	case "DOT": return "a";
+	case "HORIZ_BAR": return "ä";
+	case "CURVE_TO_LEFT": return "ò";
+	case "CURVE_TO_RIGHT": return "ó";
+	case "HORIZ_WITH_BOTTOM_LINE": return "e";
+	case "HORIZ_WITH_TOP_LINE": return "ë";
+	case "CURVE_TO_TOP": return "o";
+	case "CURVE_TO_BOTTOM": return "ö";
+	case "VERT_WITH_LEFT_LINE": return "ü";
+	case "VERT_WITH_RIGHT_LINE": return "u";
+	case "DIAG_BAR": return "i";
+	case "VERT_BAR": return "ï";
+	case "ALPHABETIC_PLACEHOLDER": return "{";
+	default: return name;
 	}
 }
 
@@ -112,20 +114,20 @@ function fillDefaultsTertiary(char) {
 		valence += `^${TERTIARY_ASPECTS_PHASES_EFFECTS[char.top]}`;
 	if(char.bottom)
 		valence += `_${TERTIARY_ASPECTS_PHASES_EFFECTS[char.bottom]}`;
-	if(char.superposed) {
+	if(char.superposed) 
 		valence += `^^${specialMarkersToCharacters(char.superposed)}`;
-	}
+	
 	if(char.underposed) {
 		if(char.bottom)
-			valence += "_"
+			valence += "_";
 		valence += `^${specialMarkersToCharacters(char.underposed)}`;
 	}
-	if(char.relativeLevel) {
+	if(char.relativeLevel) 
 		valence += `_${LEVELS[char.relativeLevel]}`;
-	}
-	if(char.absoluteLevel) {
+	
+	if(char.absoluteLevel) 
 		valence += `_${LEVELS[char.absoluteLevel]}`;
-	}
+	
 	return valence;
 }
 
@@ -135,9 +137,9 @@ function fillDefaultsQuaternary(char) {
 	let bar = "|";
 	if(char.value) {
 		const ext = CASE_ILLOCUTION_VALIDATION[char.value];
-		if(typeof ext === 'string') {
+		if(typeof ext === 'string') 
 			bar += `${ext}`;
-		} else {
+		 else {
 			if(ext.top)
 				bar += `^${ext.top}`;
 			if(ext.bottom)
@@ -151,25 +153,25 @@ function fillDefaultsQuaternary(char) {
 	if(typeof char.type === 'number') {
 		if(char.isSlotVIIAffix) {
 			if(char.isInverse)
-				bar += `_aó`
+				bar += `_aó`;
 			else
 				bar += `_aò`;
 		} else {
 			if(char.isInverse)
-				bar += `_ó`
+				bar += `_ó`;
 			else
 				bar += `_ò`;
 		}
 
 		switch(char.type) {
-			case 2:
-				bar += `^a`;
-				break;
-			case 3:
-				bar += `^ä`;
-				break;
-			default:
-				break;
+		case 2:
+			bar += `^a`;
+			break;
+		case 3:
+			bar += `^ä`;
+			break;
+		default:
+			break;
 		}
 	}
 	// ellision; only elide Cr root verbal quats with ASR and default values besides validation, and nominal quats with default values that are not affixes.
@@ -177,7 +179,7 @@ function fillDefaultsQuaternary(char) {
 	// this check doesn't elide quats for Cr root formatives with default values besides case or ill+val
 	// TODO: check for diacritics such as rps, concat, etc
 	// TODO: we may need a more robus processor that can identify formatives and elide chars from them and apply the information as diacritics to previous chars, unless zsnout allows for such through a parameter
-	if(typeof char.type !== 'number' && (char.value === "OBS" || char.value === 'THM') && char.mood === undefined && char.caseScope === undefined && !char.isSlotVIIAffix)
+	if(typeof char.type !== 'number' && (char.value === "OBS" || char.value === 'THM') && char.mood === undefined && char.caseScope === undefined && !char.isSlotVIIAffix && char.isSentenceInitial === true)
 		return "";
 	// if(char.mood === undefined && char.caseScope === undefined && !char.belongsToReferential && !char.belongsToCsFormative)
 		// return "";
@@ -191,14 +193,14 @@ function fillDefaultsRegisterMode(char) {
 
 function fillBiasChar(char) {
 	let bias = "Ʃ";
-	let ext = BIASES[char.bias]
+	const ext = BIASES[char.bias];
 	if(ext.dot === 'right')
 		bias += `${ext.prefix}>${specialMarkersToCharacters(DIACRITICS[ext.ext])}`;
 	else if(ext.dot === 'left')
 		bias += `${ext.prefix}<${specialMarkersToCharacters(DIACRITICS[ext.ext])}`;
 	else {
 		let sub = "";
-		var newExt = ext;
+		let newExt = ext;
 		if(/'/.test(newExt)) {
 			newExt = newExt.replace(/'/, '');
 			sub += "'";
@@ -214,7 +216,7 @@ function fillBiasChar(char) {
 		}
 		console.log('sub:', sub);
 		console.log('newExt:', newExt);
-		bias += sub
+		bias += sub;
 		bias += specialMarkersToCharacters(newExt);
 	}
 	return bias;
@@ -224,7 +226,7 @@ function fillBiasChar(char) {
 function fillDefaultsNumeral(char): string {
 	// process numerals by concatting their values and then converting to int
 	const str = char.value.toString();
-	var outtext = char.value.toString().at(-1); // 1's place is main char
+	let outtext = char.value.toString().at(-1); // 1's place is main char
 
 	if(str.length > 3 && str.at(-4) !== '0') // thousands
 		outtext += `<${str.at(-4)}`;
@@ -244,29 +246,29 @@ function parserObjectToFontCompatibleString(rawIn) {
 		const charType = getCharType(chr);
 		// console.log(`processing char of type ${charType}:`, chr);
 		switch(charType) {
-			case 1:
-				outstr += fillDefaultsPrimary(chr);
-				break;
-			case 2:
-				outstr += fillDefaultsSecondary(chr);
-				break;
-			case 3:
-				outstr += fillDefaultsTertiary(chr);
-				break;
-			case 4:
-				outstr += fillDefaultsQuaternary(chr);
-				break;
-			case 5:
-				outstr += fillBiasChar(chr);
-				break;
-			case 6:
-				outstr += fillDefaultsRegisterMode(chr);
-				break;
-			case 7:
-				outstr += fillDefaultsNumeral(chr);
-				break;
-			default:
-				break;
+		case 1:
+			outstr += fillDefaultsPrimary(chr);
+			break;
+		case 2:
+			outstr += fillDefaultsSecondary(chr);
+			break;
+		case 3:
+			outstr += fillDefaultsTertiary(chr);
+			break;
+		case 4:
+			outstr += fillDefaultsQuaternary(chr);
+			break;
+		case 5:
+			outstr += fillBiasChar(chr);
+			break;
+		case 6:
+			outstr += fillDefaultsRegisterMode(chr);
+			break;
+		case 7:
+			outstr += fillDefaultsNumeral(chr);
+			break;
+		default:
+			break;
 		}
 		// console.log('outstr:', outstr)
 	});
@@ -283,7 +285,7 @@ export async function render(text, font, spacing: boolean = config.rendering.spa
 
 	if(spacing === true) {
 		// Parse text
-		var phrases = text.split(' ');
+		const phrases = text.split(' ');
 		// const vowels = '[aeiouäëïöüáéíóúâêîôû']'
 		const modularAdjunctRegex = /^['wy]?[aeiouäëïöüáéíóúâêîôû]+(w|y|h[lrmnň]?w?)?/;
 		const affixualAdjunctRegex = /^[aeiouäëïöüáéíóúâêîôû]+[^aeiouäëïöüáéíóúâêîôû]+[aeiouäëïöüáéíóúâêîôû]{0,2}/;
@@ -293,7 +295,7 @@ export async function render(text, font, spacing: boolean = config.rendering.spa
 		// TODO: honestly why not just use the parser to determine if it's a suppletive or carrier
 		// TODO: or even just add spaces after quat chars or before prim chars
 		const regexC = /^(([wy]|h[wrl]?)?[aeiouäëïöüáéíóúâêîôû']{1,3}s|s[aeiouäëïöüáéíóúâêîôû']{1,3}[^aeiouäëïöüáéíóúâêîôûxy])/;
-		for(var i = phrases.length -1; i > 0; i--) {
+		for(let i = phrases.length -1; i > 0; i--) {
 			console.log('i:', i);
 			const currentPhrase = phrases[i];
 			const previousPhrase = phrases[i-1];
@@ -304,21 +306,21 @@ export async function render(text, font, spacing: boolean = config.rendering.spa
 			   regexC.test(previousPhrase.toLowerCase())
 			  ) {
 				console.log(`phrase ${currentPhrase} matches`);
-				phrases[i-1] = `${previousPhrase} ${currentPhrase}`
+				phrases[i-1] = `${previousPhrase} ${currentPhrase}`;
 				phrases.splice(i, 1);
 			}
 		}
 		console.log('phrases:', phrases);
 		parserObjects = phrases.map((x: string) => textToScript(x));
-	} else {
-		parserObjects = [textToScript(text)];
-	}
+	} else 
+		parserObjects = [textToScript(text),];
+	
 
 	const pngBuffer = await drawCharsFromObjects(parserObjects, font);
-	var result = new AttachmentBuilder(pngBuffer, { name: 'image.png' });
+	const result = new AttachmentBuilder(pngBuffer, { name: 'image.png', });
 	// Convert to script-compatible text and then to png
 	// console.log("result:", result)
-	return result
+	return result;
 }
 
 async function drawCharsFromObjects(parserObjects: Array<Result<any>>, font) {
@@ -327,15 +329,15 @@ async function drawCharsFromObjects(parserObjects: Array<Result<any>>, font) {
 	const inputWordsAsParserObjects: Array<Array<Result<any>>> = [];
 
 	for(let object of parserObjects) {
-		object = await object
+		object = await object;
 		console.log('object:', object);
 		if(object.ok === false) {
 			const err = new Error(object.reason);
 			err.name = "PARSING_ERROR";
-			throw err
-		} else {
+			throw err;
+		} else 
 			inputWordsAsParserObjects.push(object.value);
-		}
+		
 	}
 
 	let fontCompatibleString = '';
@@ -351,16 +353,25 @@ async function drawCharsFromObjects(parserObjects: Array<Result<any>>, font) {
 }
 
 
-export function sanitizeInput(arg: string) {
+// text -> font-compatible
+export function sanitizeInput(arg: string): string {
 	return arg
+		.toLowerCase()
 		.replace(/’/g, "'")
 		.replace(/đ/g, "ḑ")
-		// .replace(/đ/g, "ḑ")
+		.replace(/ẓ/g, "ż");
+	// .replace(/đ/g, "ḑ")
+}
+
+// font-compatible -> official tnil
+export function prettifyInput(arg: string): string {
+	return arg
+		.replace(/ż/g, 'ẓ')
 }
 
 
 export function textToPng(fontCompatibleString: string, font: Font = 'basic') {
-	const fixed = fontCompatibleString.replace(/[ḑ]/g, 'ḍ') // replace d comma generated by the parser with d dot rendered by the font
+	const fixed = fontCompatibleString.replace(/[ḑ]/g, 'ḍ'); // replace d comma generated by the parser with d dot rendered by the font
 	const pngBytes = text2png(fixed, {
 		font: config.fonts[font].font,
 		localFontPath: config.fonts[font].path,
@@ -371,4 +382,4 @@ export function textToPng(fontCompatibleString: string, font: Font = 'basic') {
 	return pngBytes;
 }
 
-export default drawCharsFromObjects
+export default drawCharsFromObjects;

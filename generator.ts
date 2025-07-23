@@ -1,13 +1,13 @@
 // Generate random chars
-import { VOWEL_FORMS, ALT_VOWELS, } from './textConversionInformation.js';
-import { AFFIX_DIACRITICS, AFFIX_TYPE_DIACRITICS, } from './textConversionInformation.js';
+import { VOWEL_FORMS, Vx_VOWEL_FORMS, ALT_VOWELS, } from './textConversionInformation.js';
+import { AFFIX_DIACRITICS, AFFIX_TYPE_DIACRITICS, CASE, ILLOCUTION, VALIDATION, CASE_ILLOCUTION_VALIDATION, CASE_TO_SEQUENCE, SEQUENCE_TO_CASE, } from './textConversionInformation.js';
 import { Font, } from './util.js';
 import { textToPng, } from './transform.js';
 import config from './config.js';
 
 
 export function generateChar(ext: boolean = false, inversions: boolean = false): string {
-	const chars = ext !== true ? 'bcčçdḑfghjklļmnňprřsštţvxzžż' : 'bcčçdḑfghjklļmnňprřsštţvwxyzžż'; // wy only exist as extensions
+	const chars = ext !== true ? 'bcčçdḑfghjklļmnňprřsštţvxzžż' : '=bcčçdḑfghjklļmnňprřsštţvwxyzžż'; // wy only exist as extensions
 	const length = chars.length;
 	const rand = Math.random();
 	const randomIndex = Math.floor(rand * length);
@@ -16,9 +16,9 @@ export function generateChar(ext: boolean = false, inversions: boolean = false):
 }
 
 
-// export function generateVowel(slotVI: boolean | null = null): string {
-export function generateVowel(): [string, number, number] {
-	// console.log('vowels:', VOWEL_FORMS);
+// export function generateVxVowel(slotVI: boolean | null = null): string {
+export function generateVxVowel(): [string, number, number] {
+	// console.log('vowels:', Vx_VOWEL_FORMS);
 	const randomType = Math.floor(Math.random() * 3) + 1;
 	const randomDegree = Math.floor(Math.random() * 11);
 	let randomVowel = '';
@@ -26,7 +26,7 @@ export function generateVowel(): [string, number, number] {
 		randomVowel = 'üö'; // Ca stacking
 	}
 	else
-		randomVowel = Object.keys(VOWEL_FORMS).find(e => VOWEL_FORMS[e][0] === randomType && VOWEL_FORMS[e][1] === randomDegree);
+		randomVowel = Object.keys(Vx_VOWEL_FORMS).find(e => Vx_VOWEL_FORMS[e][0] === randomType && Vx_VOWEL_FORMS[e][1] === randomDegree);
 	return [randomVowel, randomType, randomDegree,];
 }
 
@@ -81,7 +81,7 @@ export async function generateAffix(inversions: boolean, font: Font | 'random' =
 	const generateBottomChar = extensions && Math.random() > 0.5 ? true : false;
 	let postChar = '';
 
-	const secondaryChar = generateChar();
+	let secondaryChar = generateChar();
 	let consonantCluster = `${preChar}${secondaryChar}${postChar}`;
 
 	// disallow impermissible affixes
@@ -96,9 +96,15 @@ export async function generateAffix(inversions: boolean, font: Font | 'random' =
 		if(generateBottomChar === true && extensions) postChar = generateChar(true);
 		else postChar = '';
 
-		const secondaryChar = generateChar();
+
 
 		consonantCluster = `${preChar}${secondaryChar}${postChar}`;
+	}
+
+	// disallow top-only extensions
+	if(postChar === '' && preChar !== '') {
+		postChar = preChar;
+		preChar = '';
 	}
 
 	let slotV: boolean = false;
@@ -106,18 +112,18 @@ export async function generateAffix(inversions: boolean, font: Font | 'random' =
 		slotV = Math.random() > 0.5;
 
 
-	const [vowel, vowelType, vowelDegree,] = generateVowel();
+	const [vowel, vowelType, vowelDegree,] = generateVxVowel();
 
 	// generate diacritics
 
 	const secondaryCharWithRotation = `${secondaryChar}${slotV ? '' : "'"}`; 
-	const fontChars = `${secondaryCharWithRotation}^${preChar}^${AFFIX_TYPE_DIACRITICS[vowelType -1]}_${postChar}_${AFFIX_DIACRITICS[vowelDegree]}`;
+	const fontChars = `${secondaryCharWithRotation}${preChar !== '' ? '^' + preChar : preChar}${vowelType > 1 ? '^' + AFFIX_TYPE_DIACRITICS[vowelType -1] : ''}${postChar !== '' ? '_' : ''}${postChar}_${AFFIX_DIACRITICS[vowelDegree]}`;
 	let prettifiedChars = '';
 	let prettifiedCharsAlt = '';
 	let prettifiedCharsPrettyGeminate = '';
 	let prettifiedCharsAltPrettyGeminate = '';
-	const preCharPrettyGeminate = preChar === '=' ? secondaryChar :'';
-	const postCharPrettyGeminate = postChar === '=' ? secondaryChar :'';
+	const preCharPrettyGeminate = preChar === '=' ? secondaryChar : preChar;
+	const postCharPrettyGeminate = postChar === '=' ? secondaryChar : postChar;
 
 	if(slotV) {
 		prettifiedChars = `${preChar}${secondaryChar}${postChar}${vowel}`;
@@ -135,8 +141,9 @@ export async function generateAffix(inversions: boolean, font: Font | 'random' =
 
 	if(vowelType === 3 && !['üo', 'eë', 'üö'].some(x => x === vowel)) {
 		[prettifiedChars, prettifiedCharsAlt].forEach(x => answer.push(x))
-		if(prettifiedCharsAltPrettyGeminate !== prettifiedCharsAlt)
+		if(prettifiedCharsAltPrettyGeminate !== prettifiedCharsAlt) {
 			answer.push(prettifiedCharsAltPrettyGeminate)
+		}
 	} else
 		answer.push(prettifiedChars);
 
@@ -160,7 +167,8 @@ export async function generateExtensions(settings: {
 	inversions: boolean,
 	font: Font|'random',
 	wordLength: number
-}): Promise<{ image: any, answer: string }> {
+	ignoreMissingApostrophes: boolean,
+}): Promise<{ image: any, answer: string[] }> {
 	let {inversions, font,} = settings;
 	if(font === 'random')
 		font = 'basic';
@@ -168,31 +176,31 @@ export async function generateExtensions(settings: {
 	const secondaryChar = generateChar();
 	let preChar = generateChar(true);
 	let scriptPreChar = preChar
-	// if(preChar === secondaryChar) preChar = '=';
-	if(preChar === secondaryChar) scriptPreChar = '=';
 	let postChar = generateChar(true);
 	let scriptPostChar = postChar
-	// if(postChar === secondaryChar) postChar = '=';
-	if(postChar === secondaryChar) scriptPostChar = '=';
 	let apostrophe = '';
 	if(inversions === true || (config.quizzes.inversionByDefault === true && inversions !== false))
 		apostrophe += `${Math.random() > 0.5 ? "'" : ''}`;
 	const secondaryCharWithRotation = `${secondaryChar}${apostrophe}`; 
-	const randomChars = `${secondaryCharWithRotation}^${scriptPreChar}_${scriptPostChar}`;
+	const randomChars = `${secondaryCharWithRotation}${scriptPreChar !== '' ? '^' + scriptPreChar : ''}${scriptPostChar !== '' ? '_' + scriptPostChar : ''}`;
 	const prettifiedChars = `${preChar}${secondaryCharWithRotation}${postChar}`;
+	const noApostrophe = `${preChar}${secondaryChar}${postChar}`;
+	const answer = [prettifiedChars];
+
+	if(noApostrophe !== prettifiedChars && settings.ignoreMissingApostrophes === true)
+		answer.push(noApostrophe);
 
 	return {
 		image: await textToPng(randomChars, font),
-		answer: prettifiedChars,
+		answer,
 	};
 }
 
-/*
-export async function generateCases(settings: {
+export async function generateCaseChar(settings: {
 	inversions: boolean,
 	font: Font|'random',
 	wordLength: number
-}): Promise<{ image: any, answer: string }>
+}): Promise<{ image: any, answer: string|string[] }>
 {
 	let {
 		inversions, font,
@@ -200,23 +208,40 @@ export async function generateCases(settings: {
 	if(font === 'random')
 		font = 'basic';
 
-	const mainChar = generateChar();
-	let preChar = generateChar(true);
-	if(preChar === secondaryChar) preChar = '=';
-	let postChar = generateChar(true);
-	if(postChar === secondaryChar) postChar = '=';
-	let apostrophe = '';
-	if(inversions === true || (config.quizzes.inversionByDefault === true && inversions !== false))
-		apostrophe += `${Math.random() > 0.5 ? "'" : ''}`;
-	const secondaryCharWithRotation = `${secondaryChar}${apostrophe}`; 
-	const randomChars = `${secondaryCharWithRotation}^${preChar}_${postChar}`;
-	const prettifiedChars = `${preChar}${secondaryCharWithRotation}${postChar}`;
+	const mainChar = '|' || generateChar();
+	const randomSeries = Math.floor(Math.random() * 7) + 1
+	let randomRow = Math.floor(Math.random() * (randomSeries > 4 ? 7 : 8)) + 1;
+	if(randomSeries > 4 && randomRow === 8)
+		randomRow = 9;
+
+	const caseAbbr = Object.keys(CASE).find(x => {
+		// console.log({ case: CASE[x], top: CASE[x].top ? true : false, bottom: CASE[x].bottom ? true : false, seqBot: SEQUENCE_TO_CASE[randomRow], randomRow, })
+		return (CASE[x].top
+			? CASE[x].top === SEQUENCE_TO_CASE[randomSeries]
+			: randomSeries === 1)
+		&& (CASE[x].bottom
+			? CASE[x].bottom === SEQUENCE_TO_CASE[randomRow]
+			: randomRow === 1)
+	});
+	const caseMods = CASE[caseAbbr];
+	const caseChar = `${mainChar}${caseMods.top ? '^' + caseMods.top : ''}${caseMods.bottom ? '_' + caseMods.bottom : ''}`;
+	const plainVowelForm = Object.keys(VOWEL_FORMS).find(x => VOWEL_FORMS[x][0] === (randomSeries > 4 ? randomSeries -4 : randomSeries) && VOWEL_FORMS[x][1] === randomRow);
+	// add glottal stop where necessary
+	// TODO: prettify slightly (-a'- or -a'a)
+	// console.log({ randomSeries, randomRow, caseAbbr, caseMods, caseChar, plainVowelForm, });
+	const vowelForm =
+		randomSeries >= 5
+			? randomSeries >= 6
+				? (plainVowelForm[0] || 'a') + "'" + (plainVowelForm[1] || 'a')
+				: (plainVowelForm || 'a') + "'"  + (plainVowelForm || 'a')
+			: plainVowelForm;
 
 	return {
-		image: await textToPng(randomChars, font),
-		answer: prettifiedChars,
+		image: await textToPng(`${caseChar}`, font),
+		answer: vowelForm,
 	};
 }
-*/
 
 // next generate diacritics for case/ill/val & also ill/val/mood chars etc
+
+// export function generateCaseChar() {}

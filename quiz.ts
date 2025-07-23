@@ -4,9 +4,9 @@ import {
 import config from './config.js';
 import { Font, sleep, } from './util.js';
 import {
-	generateSecondary, GenerateResult, GeneratedQuestion, generateAffix, generateExtensions,
+	generateSecondary, GenerateResult, GeneratedQuestion, generateAffix, generateExtensions, generateCaseChar,
 } from './generator.js';
-import { sanitizeInput } from './transform.js';
+import { sanitizeInput, } from './transform.js';
 
 export type UserID = Snowflake & string;
 export type ChannelID = Snowflake & string;
@@ -67,6 +67,7 @@ export class Quiz implements QuizOptions {
 	questionTimer: ReturnType<typeof setTimeout>;
 	
 	lastQuestion: {
+		winningMessage: Message | null;
 		winner: null | User;
 		answer: string | string[];
 	};
@@ -87,7 +88,7 @@ export class Quiz implements QuizOptions {
 		this.index = 0;
 		this.length = settings.length <= config.quizzes.maxLength ? settings.length : config.quizzes.maxLength;
 		this.interactionTimer = null;
-		settings.time = settings.time * 1000
+		settings.time = settings.time * 1000;
 		this.time = settings.time <= config.quizzes.maxQuestionTimeoutMs ? settings.time : config.quizzes.maxQuestionTimeoutMs;
 		this.extensions = settings.extensions;
 	}
@@ -97,7 +98,7 @@ export class Quiz implements QuizOptions {
 	}
 	private setInteractionTimer() {
 		async function ender() {
-			await this.end('timer')
+			await this.end('timer');
 		}
 		this.interactionTimer = setTimeout(ender.bind(this), config.quizzes.timeoutMs);
 	}
@@ -151,13 +152,18 @@ export class Quiz implements QuizOptions {
 		return;
 	}
 	
-	private async processAttempt() {
+	private async processAttempt(): Promise<0> {
 		this.processingAttempt = true;
 
 		while(true) {
 			if(this.lastQuestion?.winner) {
 				// this.announceWinner(this.lastQuestion?.winner, this.lastQuestion.answer);
 				// delete this.lastQuestion;
+					this.clearQuestionTimeout();
+					await this.announceWinner(this.lastQuestion.winningMessage.author, this.lastQuestion.answer);
+					delete this.lastQuestion;
+					this.attemptQueue = [];
+					break;
 			} else if(this.attemptQueue.length < 1)
 				break;
 			else if(this.ending)
@@ -169,12 +175,11 @@ export class Quiz implements QuizOptions {
 				const validation = await this.validateAttempt(message);
 				if(validation === true) {
 					// TODO: augment stats
-					if(this.ending)
-						return;
 					await this.announceWinner(message.author, this.lastQuestion.answer);
+					this.attemptQueue = [];
 					delete this.lastQuestion;
 					await this.awaitInterim();
-					this.clearQuestionTimeout();
+					this.questionInterim = false;
 					await this.nextQuestion();
 				} if(validation === -1) {
 				} else 
@@ -185,6 +190,7 @@ export class Quiz implements QuizOptions {
 		}
 
 		this.processingAttempt = false;
+		return 0;
 	};
 
 	private async validateAttempt(message: Message): Promise<boolean | -1> {
@@ -201,17 +207,20 @@ export class Quiz implements QuizOptions {
 				return false;
 		}
 		this.uninteractedQuestions = 0;
-		let evaluation = false
+		let evaluation = false;
 		if(this.lastQuestion?.answer) {
 			if(Array.isArray(this.lastQuestion.answer)) {
 				if(this.lastQuestion.answer.some(x => x.toLowerCase() === attempt?.toLowerCase())) 
-				   evaluation = true
-			} else if(attempt?.toLowerCase() === this.lastQuestion?.answer?.toLowerCase()) {
-				evaluation = true
-			}
+				   evaluation = true;
+			} else if(attempt?.toLowerCase() === this.lastQuestion?.answer?.toLowerCase()) 
+				evaluation = true;
+			
 			if(evaluation === true) {
+				this.questionInterim = true;
 				this.clearQuestionTimeout();
 				this.lastQuestion.winner = message.author;
+				this.lastQuestion.winningMessage = message;
+				this.attemptQueue = [];
 				return true;
 			}
 		}
@@ -221,14 +230,18 @@ export class Quiz implements QuizOptions {
 	async receiveAttempt(message: Message) {
 		if(this.ending)
 			return;
+		if(this.questionInterim === true)
+			return;
 
 		this.attemptQueue.push(message);
 		this.clearInteractionTimeout();
 
 		if(this.processingAttempt)
 			return;
-		else
+		else {
+			this.processingAttempt = true
 			this.processAttempt();
+		}
 	}
 
 	private async nextQuestion() {
@@ -236,12 +249,14 @@ export class Quiz implements QuizOptions {
 			throw new Error("QUIZ_NOT_ACTIVE");
 		if(this.ending)
 			return;
+		if(this.questionInterim === true)
+			return;
 
 		this.uninteractedQuestions++;
 
-		if(this.uninteractedQuestions > config.quizzes.maxUninteractedQuestions) {
-			return await this.end('max');
-		}
+		if(this.uninteractedQuestions > config.quizzes.maxUninteractedQuestions) 
+			return await this.end('max uninteracted questions');
+		
 
 		if(this.index === this.length) {
 			// TODO: better end style pls
@@ -260,11 +275,9 @@ export class Quiz implements QuizOptions {
 		switch(this.type) {
 		case 'secondaries': {
 			// re-attempt generation
-			while(!result || typeof result === 'string') {
-				result = await generateSecondary({
-					...this.settings,
-				});
-			}
+			while(!result || typeof result === 'string') 
+				result = await generateSecondary({...this.settings,});
+			
 				
 		};
 		case 'affixes': {
@@ -279,12 +292,12 @@ export class Quiz implements QuizOptions {
 				result = await generateExtensions(this.settings);
 			
 		};
-		// case 'cases': {
-			// // TODO: accept alternate forms of affixes
-			// while(!result || typeof result === 'string') 
-				// result = await generateAffix(this.inversions, this.font, this.extensions);
+		case 'cases': {
+			// TODO: accept alternate forms of affixes
+			while(!result || typeof result === 'string') 
+				result = await generateCaseChar(this.settings);
 			
-		// };
+		};
 		}
 
 		// for shitty ts
@@ -292,6 +305,7 @@ export class Quiz implements QuizOptions {
 			throw new Error();
 
 		this.lastQuestion = {
+			winningMessage: null,
 			winner: null,
 			answer: result.answer,
 		};
@@ -314,8 +328,11 @@ export class Quiz implements QuizOptions {
 			this.setInteractionTimer();
 	}
 
-	private async end(reason: string) {
-		console.log('ending, reason:', { reason: reason, trace: '' });
+	async end(reason: string) {
+		console.log('ending, reason:', {
+			reason,
+			trace: '', 
+		});
 		if(this.ending) // don't run this function twice
 			return;
 		this.ending = true;
@@ -326,7 +343,7 @@ export class Quiz implements QuizOptions {
 		this.destroy();
 	}
 
-	destroy() {
+	private destroy() {
 		this.engagements.forEach(destroyEngagement);
 		if(this.collaborative) {
 			delete quizzes[this.interaction.channelId].publicQuiz;
@@ -393,7 +410,7 @@ export function initiateQuiz(interaction: CommandInteraction, options: QuizOptio
 		if(quizzes[channelId].publicQuiz !== null && quizzes[channelId].publicQuiz !== undefined)
 			return "QUIZ_IN_CHANNEL_EXISTS";
 		else {
-			const quiz = new Quiz(interaction, options)
+			const quiz = new Quiz(interaction, options);
 			quizzes[channelId].publicQuiz = quiz;
 			return quiz;
 		}
