@@ -1,6 +1,6 @@
 // Generate random chars
 import { VOWEL_FORMS, Vx_VOWEL_FORMS, ALT_VOWELS, ILLOCUTION_VOWELS, VALIDATION_VOWELS, } from './textConversionInformation.js';
-import { AFFIX_DIACRITICS, AFFIX_TYPE_DIACRITICS, CASE, ILLOCUTION, ILLOCUTION_SHORTCUTS, VALIDATION_SHORTCUTS, VALIDATION, CASE_ILLOCUTION_VALIDATION, CASE_TO_SEQUENCE, SEQUENCE_TO_CASE, } from './textConversionInformation.js';
+import { AFFIX_DIACRITICS, AFFIX_TYPE_DIACRITICS, CASE, ILLOCUTION, ILLOCUTION_SHORTCUTS, VALIDATION_SHORTCUTS, CASE_SHORTCUTS, VALIDATION, CASE_ILLOCUTION_VALIDATION, CASE_TO_SEQUENCE, SEQUENCE_TO_CASE, } from './textConversionInformation.js';
 import { Font, } from './util.js';
 import { textToPng, } from './transform.js';
 import config from './config.js';
@@ -244,11 +244,7 @@ export function generateValidation(): keyof typeof VALIDATION {
 	return validation;
 }
 
-export async function generateCaseChar(settings: {
-	inversions: boolean,
-	font: Font|'random',
-	wordLength: number
-}): Promise<{ image: any, answer: string|string[] }>
+export async function generateCaseChar(settings: QuizOptions): Promise<{ image: any, answer: string|string[] }>
 {
 	let {
 		inversions, font,
@@ -256,7 +252,7 @@ export async function generateCaseChar(settings: {
 	if(font === 'random')
 		font = 'basic';
 
-	const mainChar = '|' || generateChar();
+
 	const randomSeries = Math.floor(Math.random() * 7) + 1
 	let randomRow = Math.floor(Math.random() * (randomSeries > 4 ? 7 : 8)) + 1;
 	if(randomSeries > 4 && randomRow === 8)
@@ -271,8 +267,13 @@ export async function generateCaseChar(settings: {
 			? CASE[x].bottom === SEQUENCE_TO_CASE[randomRow]
 			: randomRow === 1)
 	});
+
 	const caseMods = CASE[caseAbbr];
-	const caseChar = `${mainChar}${caseMods.top ? '^' + caseMods.top : ''}${caseMods.bottom ? '_' + caseMods.bottom : ''}`;
+
+	const caseChar = settings.shortcuts === true
+	? `\\${generateChar()}${caseMods.top ? '^^' + CASE_SHORTCUTS[caseMods.series -1] : ''}${caseMods.bottom ? '__' + CASE_SHORTCUTS[caseMods.val -1] : ''}`
+	: `|${caseMods.top ? '^' + caseMods.top : ''}${caseMods.bottom ? '_' + caseMods.bottom : ''}`;
+
 	const plainVowelForm = Object.keys(VOWEL_FORMS).find(x => VOWEL_FORMS[x][0] === (randomSeries > 4 ? randomSeries -4 : randomSeries) && VOWEL_FORMS[x][1] === randomRow);
 	// add glottal stop where necessary
 	// TODO: prettify slightly (-a'- or -a'a)
@@ -284,6 +285,7 @@ export async function generateCaseChar(settings: {
 				: (plainVowelForm || 'a') + "'"  + (plainVowelForm || 'a')
 			: plainVowelForm;
 
+	console.log('casechar:', caseChar);
 	return {
 		image: await textToPng(`${caseChar}`, font),
 		answer: vowelForm,
