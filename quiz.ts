@@ -1,19 +1,36 @@
 import {
-	User, Snowflake, CommandInteraction, Message,
+	User, Snowflake, CommandInteraction, Message, CacheType,
 } from 'discord.js';
 import config from './config.js';
 import { Font, sleep, } from './util.js';
 import {
 	generateSecondary, GenerateResult, GeneratedQuestion, generateAffix, generateExtensions, generateCaseChar,
+	generateIllVal,
 } from './generator.js';
 import { sanitizeInput, } from './transform.js';
 
 export type UserID = Snowflake & string;
 export type ChannelID = Snowflake & string;
 export type CommandID = Snowflake & string;
-export type QuizType = |'secondaries'|'affixes'|'extensions'|'cases';
+export type QuizType = |'secondaries'|'affixes'|'extensions'|'cases'|'ill_val';
 
 export interface QuizOptions {
+	extensions: boolean;
+	time: number;
+	type: QuizType | null;
+	inversions: boolean;
+	wordLength: number;
+	collaborative: boolean;
+	length: number;
+	font: Font | 'random';
+	ignoreMissingApostrophes: boolean;
+	shortcuts: boolean;
+	fontColor: string | null;
+	backgroundColor: string | null;
+	borderColor: string | null;
+}
+
+export class QuizOptionsModel implements QuizOptions {
 	extensions: boolean;
 	time: number;
 	type: QuizType;
@@ -23,6 +40,26 @@ export interface QuizOptions {
 	length: number;
 	font: Font | 'random';
 	ignoreMissingApostrophes: boolean;
+	shortcuts: boolean;
+	fontColor: string | null;
+	backgroundColor: string | null;
+	borderColor: string | null;
+
+	constructor(options/*: CommandInteraction['options']*/, subcommand = null) {
+		this.inversions = options.get('inverted')?.value || true;
+		this.extensions = options.get('extensions')?.value || true;
+		this.time = options.get('time')?.value;
+		this.font = options.get('font')?.value;
+		this.fontColor = options.get('font_color')?.value;
+		this.backgroundColor = options.get('background_color')?.value;
+		this.borderColor = options.get('border_color')?.value;
+		this.wordLength = options.get('group_size')?.value || 3;
+		this.collaborative = options.get('collaborative')?.value || false;
+		this.length = options.get('length')?.value || 5;
+		this.shortcuts = options.get('shortcuts')?.value || false;
+		this.ignoreMissingApostrophes = options.get('ignore_missing_apostrophes')?.value || false;
+		this.type = subcommand;
+	}
 }
 
 export class Quiz implements QuizOptions {
@@ -37,6 +74,10 @@ export class Quiz implements QuizOptions {
 	type: QuizType;
 	timeout: number;
 	ignoreMissingApostrophes: boolean;
+	shortcuts: boolean;
+	fontColor: string | null;
+	backgroundColor: string | null;
+	borderColor: string | null;
 
 	settings: QuizOptions;
 	interaction: CommandInteraction;
@@ -91,6 +132,10 @@ export class Quiz implements QuizOptions {
 		settings.time = settings.time * 1000;
 		this.time = settings.time <= config.quizzes.maxQuestionTimeoutMs ? settings.time : config.quizzes.maxQuestionTimeoutMs;
 		this.extensions = settings.extensions;
+		this.shortcuts = settings.extensions;
+		this.fontColor = settings.fontColor;
+		this.borderColor = settings.borderColor;
+		this.backgroundColor = settings.backgroundColor;
 	}
 
 	private setQuestionTimer() {
@@ -276,14 +321,14 @@ export class Quiz implements QuizOptions {
 		case 'secondaries': {
 			// re-attempt generation
 			while(!result || typeof result === 'string') 
-				result = await generateSecondary({...this.settings,});
+				result = await generateSecondary(this.settings);
 			
 				
 		};
 		case 'affixes': {
 			// TODO: accept alternate forms of affixes
 			while(!result || typeof result === 'string') 
-				result = await generateAffix(this.inversions, this.font, this.extensions);
+				result = await generateAffix(this.settings);
 			
 		};
 		case 'extensions': {
@@ -297,6 +342,11 @@ export class Quiz implements QuizOptions {
 			while(!result || typeof result === 'string') 
 				result = await generateCaseChar(this.settings);
 			
+		};
+		case 'ill_val': {
+			// TODO: accept alternate forms of affixes
+			while(!result || typeof result === 'string') 
+				result = await generateIllVal(this.settings);
 		};
 		}
 

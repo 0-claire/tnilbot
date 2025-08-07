@@ -1,9 +1,10 @@
 // Generate random chars
-import { VOWEL_FORMS, Vx_VOWEL_FORMS, ALT_VOWELS, } from './textConversionInformation.js';
-import { AFFIX_DIACRITICS, AFFIX_TYPE_DIACRITICS, CASE, ILLOCUTION, VALIDATION, CASE_ILLOCUTION_VALIDATION, CASE_TO_SEQUENCE, SEQUENCE_TO_CASE, } from './textConversionInformation.js';
+import { VOWEL_FORMS, Vx_VOWEL_FORMS, ALT_VOWELS, ILLOCUTION_VOWELS, VALIDATION_VOWELS, } from './textConversionInformation.js';
+import { AFFIX_DIACRITICS, AFFIX_TYPE_DIACRITICS, CASE, ILLOCUTION, ILLOCUTION_SHORTCUTS, VALIDATION_SHORTCUTS, VALIDATION, CASE_ILLOCUTION_VALIDATION, CASE_TO_SEQUENCE, SEQUENCE_TO_CASE, } from './textConversionInformation.js';
 import { Font, } from './util.js';
 import { textToPng, } from './transform.js';
 import config from './config.js';
+import { QuizOptions } from './quiz.js';
 
 
 export function generateChar(ext: boolean = false, inversions: boolean = false): string {
@@ -38,7 +39,7 @@ export interface GeneratedQuestion {
 	answer: string | string[],
 };
 
-export async function generateSecondary(settings: { inversions: boolean, font: Font|'random', wordLength: number}): Promise<GenerateResult> {
+export async function generateSecondary(settings: QuizOptions): Promise<GenerateResult> {
 	let {
 		inversions, font, wordLength, 
 	} = settings;
@@ -72,7 +73,11 @@ export async function generateSecondary(settings: { inversions: boolean, font: F
 
 }
 
-export async function generateAffix(inversions: boolean, font: Font | 'random' = 'basic', extensions: boolean = false): Promise<GeneratedQuestion> {
+//export async function generateAffix(inversions: boolean, font: Font | 'random' = 'basic', extensions: boolean = false): Promise<GeneratedQuestion> {
+export async function generateAffix(settings: QuizOptions): Promise<GeneratedQuestion> {
+	const { inversions, extensions } = settings;
+	let { font, } = settings;
+
 	if(font === 'random')
 		font = 'basic';
 	const generateTopChar = extensions && Math.random() > 0.5 ? true : false;
@@ -194,6 +199,49 @@ export async function generateExtensions(settings: {
 		image: await textToPng(randomChars, font),
 		answer,
 	};
+}
+
+
+export async function generateIllVal(settings: QuizOptions): Promise<{ image: any, answer: string|string[] }> {
+	const is_val = Math.random()  >= 0.5;
+	let ill = generateIllocution();
+	if(!is_val && ill === 'ASR') {
+		while(ill === 'ASR') {
+			ill = generateIllocution();
+			if(ill !== 'ASR')
+				break;
+		}
+	} else if(is_val && ill !== 'ASR')
+		ill = 'ASR';
+	let value = ill === 'ASR' ? generateValidation() : ill;
+	const answer = { ...ILLOCUTION_VOWELS, ...VALIDATION_VOWELS }[value]
+
+	let fontChars = settings.shortcuts === false
+		? `|${ ill === 'ASR' ? VALIDATION[value] : ILLOCUTION[value] }`
+		: `\\<a${generateChar()}${ ill === 'ASR' ? VALIDATION_SHORTCUTS[value] : ILLOCUTION_SHORTCUTS[value] }`;
+		
+	
+	return {
+		image: await textToPng(fontChars),
+		answer,
+	}
+}
+
+export function generateIllocution(): keyof typeof ILLOCUTION {
+	const ills = Object.keys(ILLOCUTION) as Array<keyof typeof ILLOCUTION>;
+	const random = Math.floor(Math.random() * ills.length);
+	const illocution = ills[random];
+
+	return illocution;
+}
+
+
+export function generateValidation(): keyof typeof VALIDATION {
+	const vals = Object.keys(VALIDATION) as Array<keyof typeof VALIDATION>;
+	const random = Math.floor(Math.random() * vals.length);
+	const validation = vals[random];
+
+	return validation;
 }
 
 export async function generateCaseChar(settings: {

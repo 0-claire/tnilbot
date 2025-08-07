@@ -184,6 +184,19 @@ export const LEVELS = {
 	"MAX": "ä",
 };
 
+export const ILLOCUTION_VOWELS = {
+	// TODO: test ASR
+	ASR: null,
+	DIR: 'ái',
+	DEC: 'áu',
+	IRG: 'éi',
+	VRF: 'éu',
+	ADM: 'óu',
+	POT: 'ói',
+	HOR: 'íu',
+	CNJ: 'úi',
+}
+
 export const ILLOCUTION = {
 	// TODO: test ASR
 	ASR: '^s_s',
@@ -197,6 +210,19 @@ export const ILLOCUTION = {
 	CNJ: '^z',
 }
 
+export const VALIDATION_VOWELS = {
+	OBS: 'á',
+	REC: 'â',
+	PUP: 'é',
+	RPR: 'í',
+	IMA: 'ô',
+	CVN: 'ó',
+	ITU: 'û',
+	INF: 'ú',
+	USP: 'êi',
+}
+
+// for quaternaries
 export const VALIDATION = {
 	OBS: '^s_s',
 	REC: '^s_ḑ',
@@ -207,6 +233,30 @@ export const VALIDATION = {
 	ITU: '^s_x',
 	INF: '^s_n',
 	USP: '^s_z',
+}
+
+export const ILLOCUTION_SHORTCUTS = {
+	ASR: '',
+	DIR: '^a',
+	DEC: '^ä',
+	IRG: '^ò',
+	VRF: '^ó',
+	ADM: '^e',
+	POT: '^ë',
+	HOR: '^o',
+	CNJ: '^ö',
+}
+
+export const VALIDATION_SHORTCUTS = {
+	OBS: '',
+	REC: '_a',
+	PUP: '_ä',
+	RPR: '_ò',
+	IMA: '_ó',
+	CVN: '_e',
+	ITU: '_ë',
+	INF: '_o',
+	USP: '_ö',
 }
 
 export const CASE_TO_SEQUENCE = {

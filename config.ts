@@ -4,12 +4,12 @@ const config = {
 	fonts: {
 		basic: {
 			font: '100px IthkuilBasic',
-			path: './IthkuilBasic.ttf',
+			path: './resources/fonts/IthkuilBasic.ttf',
 			name: 'Ithkuil Basic',
 		},
 		flow: {
 			font: '100px IthkuilFlow',
-			path: './IthkuilFlow.ttf',
+			path: './resources/fonts/IthkuilFlow.ttf',
 			name: 'Ithkuil Flow',
 		},
 	},

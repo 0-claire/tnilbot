@@ -8,11 +8,87 @@ import {
 } from './generator.js';
 import config from './config.js';
 import {
-	initiateQuiz, engagedUsers, quizzes, Quiz, QuizOptions, 
+	initiateQuiz, engagedUsers, quizzes, Quiz, QuizOptions, QuizOptionsModel,
 } from './quiz.js';
 import { Font, } from './util.js';
 
 // TODO: move code into commands/ and into svg.ts(x) or tnil.ts(x)
+
+function createOptions(innerBuilder) {
+	innerBuilder
+		.addBooleanOption(option => 
+		  option
+				.setName("inversions")
+				.setDescription("Mix in inverted chars")
+		 )
+		.addBooleanOption(option => 
+		  option
+				.setName("extensions")
+				.setDescription("Mix in char extensions")
+		 )
+		.addNumberOption(option =>
+			option
+				.setName("group_size")
+				.setDescription("Number of chars (not including extensions) in each question")
+		)
+		.addNumberOption(option =>
+			option
+				.setName("length")
+				.setDescription("Number of questions to be given")
+		)
+		.addNumberOption(option =>
+			option
+				.setName("time")
+				.setDescription("Number of seconds to answer each question")
+		)
+		.addBooleanOption(option =>
+			option
+				.setName("ignore_missing_apostrophes")
+				.setDescription("Ignore missing apostrophes for flipped chars")
+		)
+		.addBooleanOption(option =>
+			option
+				.setName("shortcuts")
+				.setDescription("Use secondary shortcuts for case & illocution/validation")
+		)
+		.addBooleanOption(option =>
+			option
+				.setName("collaborative")
+				.setDescription("Allow others to join in")
+		)
+		.addStringOption(option => 
+			option
+				.setName("font")
+				.setDescription("which font should I use")
+				.addChoices(
+					{
+						name: "calligraphic",
+						value: "basic", 
+					},
+					{
+						name: "handwritten",
+						value: "flow", 
+					}
+				)
+		)
+		.addStringOption(option => 
+			option
+				.setName("background_color")
+				.setDescription("Background color (e.g. white, #fff, #fefefe")
+		)
+		.addStringOption(option => 
+			option
+				.setName("font_color")
+				.setDescription("color of the rendered text (e.g. white, #fff, #fefefe)")
+		)
+		.addStringOption(option => 
+			option
+				.setName("border_color")
+				.setDescription("border color of the rendered text (e.g. white, #fff, #fefefe)")
+		)
+		;
+	return innerBuilder;
+}
 
 export async function shutdownClient() {
 	// Shutdown quizzes
@@ -245,15 +321,7 @@ const commands = [
 			 return builder;
 		}),
 		async exec(interaction) {
-			const inversions = interaction.options.get('inverted')?.value;
-			const font = interaction.options.get('font')?.value;
-			const wordLength = 5;
-
-			const result = await generateSecondary({
-				inversions,
-				font,
-				wordLength, 
-			});
+			const result = await generateSecondary(new QuizOptionsModel(interaction.options));
 			if(typeof result !== 'string') {
 				const { image, answer, } = result;
 				await interaction.reply({
@@ -336,60 +404,6 @@ const commands = [
 			name: 'quiz',
 			description: 'quiz on script chars',
 		}, builder => {
-			function createOptions(innerBuilder) {
-				innerBuilder
-					.addBooleanOption(option => 
-					  option
-							.setName("inversions")
-							.setDescription("Mix in inverted chars")
-					 )
-					.addBooleanOption(option => 
-					  option
-							.setName("extensions")
-							.setDescription("Mix in char extensions")
-					 )
-					.addNumberOption(option =>
-						option
-							.setName("group_size")
-							.setDescription("Number of chars (not including extensions) in each question")
-					)
-					.addNumberOption(option =>
-						option
-							.setName("length")
-							.setDescription("Number of questions to be given")
-					)
-					.addNumberOption(option =>
-						option
-							.setName("time")
-							.setDescription("Number of seconds to answer each question")
-					)
-					.addBooleanOption(option =>
-						option
-							.setName("ignore_missing_apostrophes")
-							.setDescription("Ignore missing apostrophes for flipped chars")
-					)
-					.addBooleanOption(option =>
-						option
-							.setName("collaborative")
-							.setDescription("Allow others to join in")
-					)
-					.addStringOption(option => 
-			  option
-							.setName("font")
-							.setDescription("which font should I use")
-							.addChoices(
-								{
-									name: "calligraphic",
-									value: "basic", 
-								},
-								{
-									name: "handwritten",
-									value: "flow", 
-								}
-							)
-					);
-				return innerBuilder;
-			}
 
 			builder.addSubcommand(command => {
 				command
@@ -418,6 +432,14 @@ const commands = [
 					.setDescription("Case characters");
 				return createOptions(command);
 			});
+
+			builder.addSubcommand(command => {
+				command
+					.setName("ill_val")
+					.setDescription("Illocutions & Validations");
+				return createOptions(command);
+			});
+
 			return builder;
 		}),
 		exec: async interaction => {
@@ -425,27 +447,10 @@ const commands = [
 			// TODO: there's probably a better way to do this
 			const subcommand = interaction.options['_subcommand'];
 
-			const inverted = interaction.options.get('inverted')?.value || true;
-			const extensions = interaction.options.get('extensions')?.value || true;
-			const time = interaction.options.get('time')?.value;
-			const font = interaction.options.get('font')?.value;
-			const wordLength = interaction.options.get('group_size')?.value || 3;
-			const collaborative: boolean = interaction.options.get('collaborative')?.value || false;
-			const quizLength = interaction.options.get('length')?.value || 5;
-			const ignoreMissingApostrophes = interaction.options.get('ignore_missing_apostrophes')?.value || false;
 			// defined a timeout for the quiz
 
-			const result = initiateQuiz(interaction, {
-				type: subcommand,
-				wordLength,
-				inversions: inverted,
-				collaborative,
-				length: quizLength,
-				font,
-				time,
-				extensions,
-				ignoreMissingApostrophes, 
-			});
+			// createQuizOptions
+			const result = initiateQuiz(interaction, new QuizOptionsModel(interaction.options, subcommand));
 
 			if(typeof result !== 'string') {
 				// TODO: insert quiz data & embed perhaps
@@ -485,8 +490,9 @@ const commands = [
 		data: createSlashCommand({
 			name: 'affixes',
 			description: 'random affixes',
-		}, x => x)
-			.addBooleanOption(option => 
+		}, x => {
+			//createOptions(x);
+			x.addBooleanOption(option => 
 			  option
 					.setName("slot_vi")
 					.setDescription("mix in slot VI affixes (inverted)")
@@ -506,13 +512,13 @@ const commands = [
 						}
 					)
 			)
+			return x;
+		})
 		,
 		exec: async interaction => {
-			// const wordLength = 5;
-			const inverted = interaction.options.get('slot_vi')?.value;
-			const font = interaction.options.get('font')?.value;
-
-			const result = await generateAffix(inverted, font);
+			const options = new QuizOptionsModel(interaction.options);
+			options.inversions = interaction.options.get('slot_vi')?.value || false;
+			const result = await generateAffix(options);
 			const { image, answer, } = result;
 
 			if(result) {
