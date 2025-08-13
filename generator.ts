@@ -1,8 +1,8 @@
 // Generate random chars
 import { VOWEL_FORMS, Vx_VOWEL_FORMS, ALT_VOWELS, ILLOCUTION_VOWELS, VALIDATION_VOWELS, } from './textConversionInformation.js';
-import { AFFIX_DIACRITICS, AFFIX_TYPE_DIACRITICS, CASE, ILLOCUTION, ILLOCUTION_SHORTCUTS, VALIDATION_SHORTCUTS, CASE_SHORTCUTS, VALIDATION, CASE_ILLOCUTION_VALIDATION, CASE_TO_SEQUENCE, SEQUENCE_TO_CASE, } from './textConversionInformation.js';
+import { AFFIX_DIACRITICS, AFFIX_TYPE_DIACRITICS, CASE, ILLOCUTION, ILLOCUTION_SHORTCUTS, VALIDATION_SHORTCUTS, CASE_SHORTCUTS, VALIDATION, CASE_ILLOCUTION_VALIDATION, CASE_TO_SEQUENCE, SEQUENCE_TO_CASE, Vv_VOWELS, } from './textConversionInformation.js';
 import { Font, } from './util.js';
-import { textToPng, } from './transform.js';
+import { textToPng, render } from './transform.js';
 import config from './config.js';
 import { QuizOptions } from './quiz.js';
 
@@ -290,6 +290,29 @@ export async function generateCaseChar(settings: QuizOptions): Promise<{ image: 
 		image: await textToPng(`${caseChar}`, font),
 		answer: vowelForm,
 	};
+}
+
+export async function generatePrimaryBottomExt(settings: QuizOptions): Promise<{ image: any, answer: string|string[] }> {
+	// TODO: stem (4) + version (2) + function (2)
+	const version = Math.random() >= 0.5 ? 'PRC' : 'CPT';
+	const fn = Math.random() >= 0.5 ? 'DYN' : 'STA';
+	const duplex = Math.random() >= 0.5 ? true : false;
+	const stem = Math.floor(Math.random() * 4);
+	const root = generateChar();
+	const Vv = Vv_VOWELS[version][stem]
+
+	const formative = `${Vv}${root}${fn === 'STA' ? 'a' : 'u' }${duplex === true ? 's' : 'l'}`;
+	const answer = [formative];
+	if(version === 'PRC' && stem === 1) {
+		answer.push(formative.replace(/a/, '')) // allow elision of initial a
+	}
+	if(fn === 'STA' && duplex === false)
+		answer.push(`w${Vv}${root}a`)
+
+	return {
+		answer,
+		image: await render(formative, settings.font === 'random' ? 'basic' : settings.font, false),
+	}
 }
 
 // next generate diacritics for case/ill/val & also ill/val/mood chars etc

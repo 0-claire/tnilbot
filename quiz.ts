@@ -5,14 +5,14 @@ import config from './config.js';
 import { Font, sleep, } from './util.js';
 import {
 	generateSecondary, GenerateResult, GeneratedQuestion, generateAffix, generateExtensions, generateCaseChar,
-	generateIllVal,
+	generateIllVal, generatePrimaryBottomExt,
 } from './generator.js';
 import { sanitizeInput, } from './transform.js';
 
 export type UserID = Snowflake & string;
 export type ChannelID = Snowflake & string;
 export type CommandID = Snowflake & string;
-export type QuizType = |'secondaries'|'affixes'|'extensions'|'cases'|'ill_val';
+export type QuizType = |'secondaries'|'affixes'|'extensions'|'cases'|'ill_val'|'primary_bottom_ext';
 
 export interface QuizOptions {
 	extensions: boolean;
@@ -193,6 +193,7 @@ export class Quiz implements QuizOptions {
 
 	private async awaitInterim() {
 		this.questionInterim = true;
+		this.attemptQueue = [];
 		await sleep(config.quizzes.answerQuestionIntervalMs);
 		return;
 	}
@@ -220,12 +221,12 @@ export class Quiz implements QuizOptions {
 				const validation = await this.validateAttempt(message);
 				if(validation === true) {
 					// TODO: augment stats
-					await this.announceWinner(message.author, this.lastQuestion.answer);
 					this.attemptQueue = [];
+					await this.announceWinner(message.author, this.lastQuestion.answer);
 					delete this.lastQuestion;
-					await this.awaitInterim();
-					this.questionInterim = false;
-					await this.nextQuestion();
+					// await this.awaitInterim();
+					// this.questionInterim = false;
+					// await this.nextQuestion();
 				} if(validation === -1) {
 				} else 
 					await message.react('❌');
@@ -244,13 +245,14 @@ export class Quiz implements QuizOptions {
 		// TODO: perform substitutions foor chars where desired
 		if(message.content.startsWith('$')) {
 			// validate against users starting the quiz or part of the collab
-			if(message.content === '$cancel') {
+			if(message.content === '$cancel')
 				await this.end('cancel received');
-				return -1;
 				// allow skip too
-			} else
-				return false;
-		}
+			return -1;
+		} else if(/ /.test(message.content))
+			return -1;
+		// skip messages with spaces
+
 		this.uninteractedQuestions = 0;
 		let evaluation = false;
 		if(this.lastQuestion?.answer) {
@@ -261,8 +263,8 @@ export class Quiz implements QuizOptions {
 				evaluation = true;
 			
 			if(evaluation === true) {
-				this.questionInterim = true;
-				this.clearQuestionTimeout();
+				// this.questionInterim = true;
+				// this.clearQuestionTimeout();
 				this.lastQuestion.winner = message.author;
 				this.lastQuestion.winningMessage = message;
 				this.attemptQueue = [];
@@ -294,8 +296,8 @@ export class Quiz implements QuizOptions {
 			throw new Error("QUIZ_NOT_ACTIVE");
 		if(this.ending)
 			return;
-		if(this.questionInterim === true)
-			return;
+		// if(this.questionInterim === true)
+			// return;
 
 		this.uninteractedQuestions++;
 
@@ -347,6 +349,11 @@ export class Quiz implements QuizOptions {
 			// TODO: accept alternate forms of affixes
 			while(!result || typeof result === 'string') 
 				result = await generateIllVal(this.settings);
+		};
+		case 'primary_bottom_ext': {
+			// TODO: accept alternate forms of affixes
+			while(!result || typeof result === 'string') 
+				result = await generatePrimaryBottomExt(this.settings);
 		};
 		}
 

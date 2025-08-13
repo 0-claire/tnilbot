@@ -440,6 +440,13 @@ const commands = [
 				return createOptions(command);
 			});
 
+			builder.addSubcommand(command => {
+				command
+					.setName("primary_bottom_ext")
+					.setDescription("Primary Bottom Extensions");
+				return createOptions(command);
+			});
+
 			return builder;
 		}),
 		exec: async interaction => {

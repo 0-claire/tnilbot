@@ -65,6 +65,11 @@ export const PRIMARY_BOTTOM_RIGHT = {
     },
 };
 
+export const Vv_VOWELS: { PRC: string[], CPT: string[] } = {
+	PRC: ['o', 'a', 'e', 'u'],
+	CPT: ['ö', 'ä', 'i', 'ü'],
+}
+
 export const PRIMARY_TOP_RIGHT = {
     NRM: {
         CSL: undefined,

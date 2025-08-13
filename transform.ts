@@ -281,7 +281,7 @@ function parserObjToFontChars() {
 }
 
 
-export async function render(text, font, spacing: boolean = config.rendering.spaceBetweenWords) {
+export async function render(text: string, font: Font, spacing: boolean = config.rendering.spaceBetweenWords): Promise<AttachmentBuilder> {
 	let parserObjects: Result<any>[];
 
 	if(spacing === true) {
@@ -318,6 +318,7 @@ export async function render(text, font, spacing: boolean = config.rendering.spa
 	
 
 	const pngBuffer = await drawCharsFromObjects(parserObjects, font);
+
 	const result = new AttachmentBuilder(pngBuffer, { name: 'image.png', });
 	// Convert to script-compatible text and then to png
 	// console.log("result:", result)
@@ -350,7 +351,7 @@ async function drawCharsFromObjects(parserObjects: Array<Result<any>>, font) {
 	}
 
 	// console.log('Rendering text:', fontCompatibleString);
-	return textToPng(fontCompatibleString, font);
+	return await textToPng(fontCompatibleString, font);
 	// return canvasTtP(fontCompatibleString, font);
 }
 
