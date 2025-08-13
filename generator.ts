@@ -302,12 +302,13 @@ export async function generatePrimaryBottomExt(settings: QuizOptions): Promise<{
 	const Vv = Vv_VOWELS[version][stem]
 
 	const formative = `${Vv}${root}${fn === 'STA' ? 'a' : 'u' }${duplex === true ? 's' : 'l'}`;
-	const answer = [formative];
+	const answer = [formative, `${formative}a`];
 	if(version === 'PRC' && stem === 1) {
-		answer.push(formative.replace(/a/, '')) // allow elision of initial a
+		answer.push(`${formative.slice(1)}a`) // allow elision of initial a
 	}
-	if(fn === 'STA' && duplex === false)
+	if(fn === 'STA' && duplex === false) {
 		answer.push(`w${Vv}${root}a`)
+	}
 
 	return {
 		answer,
