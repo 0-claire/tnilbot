@@ -1,6 +1,6 @@
 import { AttachmentBuilder, } from 'discord.js';
 import text2png from 'text2png';
-import { createCanvas, registerFont } from 'canvas';
+import { createCanvas, registerFont, } from 'canvas';
 import { Result, textToScript, } from '@zsnout/ithkuil/script/index.js';
 import {
 	PRIMARY_CORES, PRIMARY_TOP_LEFT, PRIMARY_BOTTOM_RIGHT, PRIMARY_TOP_RIGHT, PRIMARY_BOTTOM_LEFT, DIACRITICS, TERTIARY_VALENCES, TERTIARY_ASPECTS_PHASES_EFFECTS, LEVELS, CASE_ILLOCUTION_VALIDATION, CASE_SCOPE, MOOD, REGISTER, BIASES, PRIMARY_CONTEXTS, 
@@ -280,6 +280,33 @@ function parserObjectToFontCompatibleString(rawIn) {
 function parserObjToFontChars() {
 }
 
+export async function parseToFontCompatibleString(text: string): Promise<string> {
+	const parserObjects = [ textToScript(text),];
+	const inputWordsAsParserObjects = [];
+
+	for(let object of parserObjects) {
+		object = await object;
+		console.log('object:', object);
+		if(object.ok === false) {
+			const err = new Error(object.reason);
+			err.name = "PARSING_ERROR";
+			throw err;
+		} else 
+			inputWordsAsParserObjects.push(object.value);
+		
+	}
+
+	let fontCompatibleString = '';
+
+	for(const wordObject of inputWordsAsParserObjects) {
+		if(fontCompatibleString.length > 0 && fontCompatibleString.at(-1) !== ' ')
+			fontCompatibleString += ' ';
+		fontCompatibleString += parserObjectToFontCompatibleString(wordObject);
+	}
+	return fontCompatibleString;
+
+}
+
 
 export async function render(text: string, font: Font, spacing: boolean = config.rendering.spaceBetweenWords): Promise<AttachmentBuilder> {
 	let parserObjects: Result<any>[];
@@ -369,14 +396,14 @@ export function sanitizeInput(arg: string): string {
 // font-compatible -> official tnil
 export function prettifyInput(arg: string): string {
 	return arg
-		.replace(/ż/g, 'ẓ')
+		.replace(/ż/g, 'ẓ');
 }
 
 
 
 export function canvasTtP(str: string, font: Font = 'basic') {
-	registerFont(config.fonts[font].path, { family: 'YourFont' });
-	const split = str.split(/(?<cap>·?(?:[bcčçdḑfghjklļmnňprřsštţvxzžż]+|[|])(?:[><^_]+(?:(?:≡|⋮)[aeiouäëïöüáéíóúâêîôû]+|[bcčçdḑfghjklļmnňprřsštţvxzžż])*)*)/)
+	registerFont(config.fonts[font].path, { family: 'YourFont', });
+	const split = str.split(/(?<cap>·?(?:[bcčçdḑfghjklļmnňprřsštţvxzžż]+|[|])(?:[><^_]+(?:(?:≡|⋮)[aeiouäëïöüáéíóúâêîôû]+|[bcčçdḑfghjklļmnňprřsštţvxzžż])*)*)/);
 
 	const canvas = createCanvas(500, 100);
 	const ctx = canvas.getContext('2d');
@@ -388,11 +415,14 @@ export function canvasTtP(str: string, font: Font = 'basic') {
 	
 	for (const char of split) {
 		if(char === '' || !char)
-			continue
+			continue;
 	  ctx.fillText(char, x, 70);
 	  x += ctx.measureText(char).width + spacing;
 	}
-	console.log({ str, split });
+	console.log({
+		str,
+		split, 
+	});
 	
 	return canvas.toBuffer();
 }

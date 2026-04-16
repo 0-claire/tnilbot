@@ -7,7 +7,7 @@ import config from './config.js';
 import { QuizOptions } from './quiz.js';
 
 
-export function generateChar(ext: boolean = false, inversions: boolean = false): string {
+export function generateChar(ext: boolean = false, inversions: boolean = false, type: null | 'Cr initial' = null): string {
 	const chars = ext !== true ? 'bcčçdḑfghjklļmnňprřsštţvxzžż' : '=bcčçdḑfghjklļmnňprřsštţvwxyzžż'; // wy only exist as extensions
 	const length = chars.length;
 	const rand = Math.random();
