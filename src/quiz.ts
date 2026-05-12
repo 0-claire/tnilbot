@@ -104,7 +104,7 @@ export class Quiz implements QuizOptions {
 	sendQuestion: (result: GeneratedQuestion) => Promise<any>;
 	answerQuestion: (answer: string | string[]) => Promise<any>;
 	announceWinner: (winner: User, answer: string | string[]) => Promise<any>;
-	declareEnd: (stats) => Promise<any>;
+	declareEnd: (stats, reason: string) => Promise<any> | any;
 	questionTimer: ReturnType<typeof setTimeout>;
 	
 	lastQuestion: {
@@ -161,7 +161,7 @@ export class Quiz implements QuizOptions {
 
 	ending: boolean; // has this quiz received a cancel command?
 
-	async activate(sendQuestion: (result: {image: any, answer: string | string[]}) => Promise<any>, answerQuestion: (answer: string | string[]) => Promise<any>, announceWinner: (winner: User, answer: string | string[]) => Promise<any>, declareEnd: (stats) => Promise<any>) {
+	async activate(sendQuestion: Quiz['sendQuestion'], answerQuestion: Quiz['answerQuestion'], announceWinner: (winner: User, answer: string | string[]) => Promise<any>, declareEnd: Quiz['declareEnd']) {
 		// for when no one gets it
 		this.answerQuestion = answerQuestion;
 		this.sendQuestion = sendQuestion;
@@ -396,7 +396,7 @@ export class Quiz implements QuizOptions {
 		// remove this quiz from quizzes
 		this.clearQuestionTimeout();
 		this.clearInteractionTimeout();
-		await this.declareEnd(this.stats);
+		await this.declareEnd(this.stats, reason);
 		this.destroy();
 	}
 

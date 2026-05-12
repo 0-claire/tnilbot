@@ -494,9 +494,9 @@ const commands = [
 						async (winner: User, answer: string|string[]) => {
 							await interaction.followUp(`Well done <@${winner.id}>! Answer was \`${Array.isArray(answer) ? answer.join('/') : answer}\``);
 						},
-						async (stats) => {
+						async (stats, reason: string) => {
 							// TODO: elaborate
-							await interaction.followUp(`Quiz ended.`);
+							await interaction.followUp(`Quiz ended. Reason: ${reason}`);
 						}
 					);
 				} catch(e) {
