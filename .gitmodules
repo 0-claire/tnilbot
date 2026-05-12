@@ -1,0 +1,3 @@
+[submodule "nix-node"]
+	path = nix-node
+	url = gitea@nas.gay:claire/nix-node.git

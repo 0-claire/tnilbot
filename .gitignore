@@ -8,3 +8,4 @@ config.ts
 .prettierrc
 .eslintrc
 secrets.json
+result*
