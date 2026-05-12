@@ -45,14 +45,35 @@
     - [ ] Complex referentials (saxaň)
 - [ ] Word builder
 
-# Development
+# Just Run
 
-- secrets.json is encrypted. Create your own in the format `{ token: string, id: number|string }`
-    - if you don't have an app go to the [discord developer's portal](https://discord.com/developers/applications/) and create a new application
-- [Authorization link](https://discord.com/oauth2/authorize?client_id=1380721179790147636&scope=bot&permissions=274877974528) to add the bot to your server. Replace `client_id` val with your own app's ID if not using the official bot
-- testing
-- [Authorization link](https://discord.com/oauth2/authorize?client_id=1382046810398265417&scope=bot&permissions=68608) to add the bot to your server. Replace `client_id` val with your own app's ID if not using the official bot
-    - `https://discord.com/oauth2/authorize?client_id=1380721179790147636&scope=bot&permissions=274877974528`
+## Dependencies
+
+- NodeJS
+
+## Tasks
+
+- Go to the releases page and download the latest release
+- if you don't have an app go to the [discord developer's portal](https://discord.com/developers/applications/) and create a new application, from where you can obtain an ID & token
+- copy ./secrets.example.json to ./secrets.json and replace the values with your own token & id
+- Add the bot to your server. Replace `client_id` val with your own app's ID if not using the official bot (i.e.. `?client_id=<your-bot-id-here>&scope...`)
+  - [Regular authorization link](https://discord.com/oauth2/authorize?client_id=1380721179790147636&scope=bot&permissions=274877974528) 
+  - [Test bot authorization link](https://discord.com/oauth2/authorize?client_id=1382046810398265417&scope=bot&permissions=68608) to add the bot to your server. Replace `client_id` val with your own app's ID if not using the official bot
+- run `node main.js`
+
+# Build & Develop
+
+## Dependencies
+
+- *All the dependencies from the [Just Run](#Just%20Run) section*
+- npm/pnpm
+
+## Tasks
+
+- Clone the repo
+- *Follow the tasks in the [Just Run](#Just%20Run)*
+- run `(p)npm install -D` before the final step
+- instead of running `node main.js` do `tsx src/main.ts`
 
 # Docs
 
@@ -61,6 +82,7 @@
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html)
 
 # Tasks
+
 - Insert space between sentences
 - fix extra spacing
 - Fix double quiz (if you answer a question after the question time is over it double nextQuestion()s)
