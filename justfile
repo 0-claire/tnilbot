@@ -17,5 +17,5 @@ rebuild-deps:
   try { rm result* }
   try { rm node_modules }
   nix-build -A node_modules
-  echo 'package-lock-only=true' o>.npmrc
+  echo 'package-lock-only=true' | save .npmrc
   ln -sf result-2/node_modules .

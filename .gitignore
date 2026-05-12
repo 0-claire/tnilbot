@@ -9,3 +9,4 @@ config.ts
 .eslintrc
 secrets.json
 result*
+.npmrc

@@ -1,10 +1,15 @@
 // Generate random chars
-import { VOWEL_FORMS, Vx_VOWEL_FORMS, ALT_VOWELS, ILLOCUTION_VOWELS, VALIDATION_VOWELS, } from './textConversionInformation.js';
-import { AFFIX_DIACRITICS, AFFIX_TYPE_DIACRITICS, CASE, ILLOCUTION, ILLOCUTION_SHORTCUTS, VALIDATION_SHORTCUTS, CASE_SHORTCUTS, VALIDATION, CASE_ILLOCUTION_VALIDATION, CASE_TO_SEQUENCE, SEQUENCE_TO_CASE, Vv_VOWELS, } from './textConversionInformation.js';
+import {
+	VOWEL_FORMS, Vx_VOWEL_FORMS, ALT_VOWELS, ILLOCUTION_VOWELS, VALIDATION_VOWELS, 
+} from './textConversionInformation.js';
+import {
+	AFFIX_DIACRITICS, AFFIX_TYPE_DIACRITICS, CASE, ILLOCUTION, ILLOCUTION_SHORTCUTS, VALIDATION_SHORTCUTS, CASE_SHORTCUTS, VALIDATION, CASE_ILLOCUTION_VALIDATION, CASE_TO_SEQUENCE, SEQUENCE_TO_CASE, Vv_VOWELS, 
+} from './textConversionInformation.js';
 import { Font, } from './util.js';
-import { textToPng, render } from './transform.js';
+import { render, render, } from './transform.js';
 import config from './config.js';
-import { QuizOptions } from './quiz.js';
+import { QuizOptions, } from './quiz.js';
+import { AttachmentBuilder } from 'discord.js';
 
 
 export function generateChar(ext: boolean = false, inversions: boolean = false, type: null | 'Cr initial' = null): string {
@@ -23,9 +28,9 @@ export function generateVxVowel(): [string, number, number] {
 	const randomType = Math.floor(Math.random() * 3) + 1;
 	const randomDegree = Math.floor(Math.random() * 11);
 	let randomVowel = '';
-	if(randomDegree === 10) {
+	if(randomDegree === 10) 
 		randomVowel = 'üö'; // Ca stacking
-	}
+	
 	else
 		randomVowel = Object.keys(Vx_VOWEL_FORMS).find(e => Vx_VOWEL_FORMS[e][0] === randomType && Vx_VOWEL_FORMS[e][1] === randomDegree);
 	return [randomVowel, randomType, randomDegree,];
@@ -35,7 +40,7 @@ export function generateVxVowel(): [string, number, number] {
 export type GenerateResult = GeneratedQuestion | string;
 
 export interface GeneratedQuestion {
-	image: any,
+	image: AttachmentBuilder,
 	answer: string | string[],
 };
 
@@ -59,7 +64,7 @@ export async function generateSecondary(settings: QuizOptions): Promise<Generate
 
 	try {
 		return {
-			image: await textToPng(randomChars, font),
+			image: await render(randomChars, font),
 			answer: randomChars,
 		};
 	} catch(e) {
@@ -75,7 +80,7 @@ export async function generateSecondary(settings: QuizOptions): Promise<Generate
 
 //export async function generateAffix(inversions: boolean, font: Font | 'random' = 'basic', extensions: boolean = false): Promise<GeneratedQuestion> {
 export async function generateAffix(settings: QuizOptions): Promise<GeneratedQuestion> {
-	const { inversions, extensions } = settings;
+	const { inversions, extensions, } = settings;
 	let { font, } = settings;
 
 	if(font === 'random')
@@ -86,7 +91,7 @@ export async function generateAffix(settings: QuizOptions): Promise<GeneratedQue
 	const generateBottomChar = extensions && Math.random() > 0.5 ? true : false;
 	let postChar = '';
 
-	let secondaryChar = generateChar();
+	const secondaryChar = generateChar();
 	let consonantCluster = `${preChar}${secondaryChar}${postChar}`;
 
 	// disallow impermissible affixes
@@ -144,21 +149,21 @@ export async function generateAffix(settings: QuizOptions): Promise<GeneratedQue
 	
 	const answer = [];
 
-	if(vowelType === 3 && !['üo', 'eë', 'üö'].some(x => x === vowel)) {
-		[prettifiedChars, prettifiedCharsAlt].forEach(x => answer.push(x))
-		if(prettifiedCharsAltPrettyGeminate !== prettifiedCharsAlt) {
-			answer.push(prettifiedCharsAltPrettyGeminate)
-		}
+	if(vowelType === 3 && !['üo', 'eë', 'üö',].some(x => x === vowel)) {
+		[prettifiedChars, prettifiedCharsAlt,].forEach(x => answer.push(x));
+		if(prettifiedCharsAltPrettyGeminate !== prettifiedCharsAlt) 
+			answer.push(prettifiedCharsAltPrettyGeminate);
+		
 	} else
 		answer.push(prettifiedChars);
 
 	if(prettifiedCharsPrettyGeminate !== prettifiedChars)
-		answer.push(prettifiedCharsPrettyGeminate)
+		answer.push(prettifiedCharsPrettyGeminate);
 	console.log('answer:', answer);
 
 	try {
 		return {
-			image: await textToPng(fontChars, font),
+			image: await render(fontChars, font),
 			// if type 3, and vowel not one of exceptions, give both vowel and alternate form
 			answer,
 		};
@@ -179,10 +184,10 @@ export async function generateExtensions(settings: {
 		font = 'basic';
 
 	const secondaryChar = generateChar();
-	let preChar = generateChar(true);
-	let scriptPreChar = preChar
-	let postChar = generateChar(true);
-	let scriptPostChar = postChar
+	const preChar = generateChar(true);
+	const scriptPreChar = preChar;
+	const postChar = generateChar(true);
+	const scriptPostChar = postChar;
 	let apostrophe = '';
 	if(inversions === true || (config.quizzes.inversionByDefault === true && inversions !== false))
 		apostrophe += `${Math.random() > 0.5 ? "'" : ''}`;
@@ -190,13 +195,13 @@ export async function generateExtensions(settings: {
 	const randomChars = `${secondaryCharWithRotation}${scriptPreChar !== '' ? '^' + scriptPreChar : ''}${scriptPostChar !== '' ? '_' + scriptPostChar : ''}`;
 	const prettifiedChars = `${preChar}${secondaryCharWithRotation}${postChar}`;
 	const noApostrophe = `${preChar}${secondaryChar}${postChar}`;
-	const answer = [prettifiedChars];
+	const answer = [prettifiedChars,];
 
 	if(noApostrophe !== prettifiedChars && settings.ignoreMissingApostrophes === true)
 		answer.push(noApostrophe);
 
 	return {
-		image: await textToPng(randomChars, font),
+		image: await render(randomChars, font),
 		answer,
 	};
 }
@@ -213,18 +218,21 @@ export async function generateIllVal(settings: QuizOptions): Promise<{ image: an
 		}
 	} else if(is_val && ill !== 'ASR')
 		ill = 'ASR';
-	let value = ill === 'ASR' ? generateValidation() : ill;
-	const answer = { ...ILLOCUTION_VOWELS, ...VALIDATION_VOWELS }[value]
+	const value = ill === 'ASR' ? generateValidation() : ill;
+	const answer = {
+		...ILLOCUTION_VOWELS,
+		...VALIDATION_VOWELS, 
+	}[value];
 
-	let fontChars = settings.shortcuts === false
+	const fontChars = settings.shortcuts === false
 		? `|${ ill === 'ASR' ? VALIDATION[value] : ILLOCUTION[value] }`
 		: `\\<a${generateChar()}${ ill === 'ASR' ? VALIDATION_SHORTCUTS[value] : ILLOCUTION_SHORTCUTS[value] }`;
 		
 	
 	return {
-		image: await textToPng(fontChars),
+		image: await render(fontChars),
 		answer,
-	}
+	};
 }
 
 export function generateIllocution(): keyof typeof ILLOCUTION {
@@ -244,16 +252,13 @@ export function generateValidation(): keyof typeof VALIDATION {
 	return validation;
 }
 
-export async function generateCaseChar(settings: QuizOptions): Promise<{ image: any, answer: string|string[] }>
-{
-	let {
-		inversions, font,
-	} = settings;
+export async function generateCaseChar(settings: QuizOptions): Promise<{ image: any, answer: string|string[] }> {
+	let {inversions, font,} = settings;
 	if(font === 'random')
 		font = 'basic';
 
 
-	const randomSeries = Math.floor(Math.random() * 7) + 1
+	const randomSeries = Math.floor(Math.random() * 7) + 1;
 	let randomRow = Math.floor(Math.random() * (randomSeries > 4 ? 7 : 8)) + 1;
 	if(randomSeries > 4 && randomRow === 8)
 		randomRow = 9;
@@ -265,14 +270,14 @@ export async function generateCaseChar(settings: QuizOptions): Promise<{ image: 
 			: randomSeries === 1)
 		&& (CASE[x].bottom
 			? CASE[x].bottom === SEQUENCE_TO_CASE[randomRow]
-			: randomRow === 1)
+			: randomRow === 1);
 	});
 
 	const caseMods = CASE[caseAbbr];
 
 	const caseChar = settings.shortcuts === true
-	? `\\${generateChar()}${caseMods.top ? '^^' + CASE_SHORTCUTS[caseMods.series -1] : ''}${caseMods.bottom ? '__' + CASE_SHORTCUTS[caseMods.val -1] : ''}`
-	: `|${caseMods.top ? '^' + caseMods.top : ''}${caseMods.bottom ? '_' + caseMods.bottom : ''}`;
+		? `\\${generateChar()}${caseMods.top ? '^^' + CASE_SHORTCUTS[caseMods.series -1] : ''}${caseMods.bottom ? '__' + CASE_SHORTCUTS[caseMods.val -1] : ''}`
+		: `|${caseMods.top ? '^' + caseMods.top : ''}${caseMods.bottom ? '_' + caseMods.bottom : ''}`;
 
 	const plainVowelForm = Object.keys(VOWEL_FORMS).find(x => VOWEL_FORMS[x][0] === (randomSeries > 4 ? randomSeries -4 : randomSeries) && VOWEL_FORMS[x][1] === randomRow);
 	// add glottal stop where necessary
@@ -287,7 +292,7 @@ export async function generateCaseChar(settings: QuizOptions): Promise<{ image: 
 
 	console.log('casechar:', caseChar);
 	return {
-		image: await textToPng(`${caseChar}`, font),
+		image: await render(`${caseChar}`, font),
 		answer: vowelForm,
 	};
 }
@@ -299,21 +304,21 @@ export async function generatePrimaryBottomExt(settings: QuizOptions): Promise<{
 	const duplex = Math.random() >= 0.5 ? true : false;
 	const stem = Math.floor(Math.random() * 4);
 	const root = generateChar();
-	const Vv = Vv_VOWELS[version][stem]
+	const Vv = Vv_VOWELS[version][stem];
 
 	const formative = `${Vv}${root}${fn === 'STA' ? 'a' : 'u' }${duplex === true ? 's' : 'l'}`;
-	const answer = [formative, `${formative}a`];
-	if(version === 'PRC' && stem === 1) {
-		answer.push(`${formative.slice(1)}a`) // allow elision of initial a
-	}
-	if(fn === 'STA' && duplex === false) {
-		answer.push(`w${Vv}${root}a`)
-	}
+	const answer = [formative, `${formative}a`,];
+	if(version === 'PRC' && stem === 1) 
+		answer.push(`${formative.slice(1)}a`); // allow elision of initial a
+	
+	if(fn === 'STA' && duplex === false) 
+		answer.push(`w${Vv}${root}a`);
+	
 
 	return {
 		answer,
 		image: await render(formative, settings.font === 'random' ? 'basic' : settings.font, false),
-	}
+	};
 }
 
 // next generate diacritics for case/ill/val & also ill/val/mood chars etc

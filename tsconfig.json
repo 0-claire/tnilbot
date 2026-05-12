@@ -1,25 +1,25 @@
 {
-	"alias": {
-		"@zsnout/ithkuil/scripts/jsx-runtime": "@zsnout/ithkuil/jsx-runtime"
-	},
-	"compilerOptions": {
-		"skipLibCheck": true,
-		"target": "esnext",
-		"module": "NodeNext",
-		"moduleResolution": "NodeNext",
-		"esModuleInterop": true,
-		"resolveJsonModule": true,
-		"types": ["node"],
-		"noImplicitAny": false,
-		"removeComments": true,
-		"preserveConstEnums": true,
-		"sourceMap": false,
-		"noImplicitReturns": true,
-        "outDir": "dist"
-	},
-	"strict": true,
-	"declaration": true,
-	"include": [
+  "alias": {
+    "@zsnout/ithkuil/script": "@zsnout/ithkuil/script/index.ts"
+  },
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "target": "nodenext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "moduleDetection": "force",
+    "resolveJsonModule": true,
+    "types": ["node"],
+    "noImplicitAny": false,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": false,
+    "noImplicitReturns": true,
+    "outDir": "dist"
+  },
+  "strict": true,
+  "declaration": true,
+  "include": [
         "src/**/*.ts"
-	]
+  ]
 }

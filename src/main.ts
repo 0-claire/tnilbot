@@ -6,7 +6,7 @@ import secrets from '../secrets.json' with { type: "json" };
 // Log the bot in
 client.login(secrets.token);
 
-async function shutDown() {
+async function shutDown(): Promise<void> {
 	try {
 		console.log("Shutting down quizzes");
 		await shutdownClient();

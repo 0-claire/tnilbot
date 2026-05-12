@@ -205,11 +205,11 @@ export class Quiz implements QuizOptions {
 			if(this.lastQuestion?.winner) {
 				// this.announceWinner(this.lastQuestion?.winner, this.lastQuestion.answer);
 				// delete this.lastQuestion;
-					this.clearQuestionTimeout();
-					await this.announceWinner(this.lastQuestion.winningMessage.author, this.lastQuestion.answer);
-					delete this.lastQuestion;
-					this.attemptQueue = [];
-					break;
+				this.clearQuestionTimeout();
+				await this.announceWinner(this.lastQuestion.winningMessage.author, this.lastQuestion.answer);
+				delete this.lastQuestion;
+				this.attemptQueue = [];
+				break;
 			} else if(this.attemptQueue.length < 1)
 				break;
 			else if(this.ending)
@@ -286,7 +286,7 @@ export class Quiz implements QuizOptions {
 		if(this.processingAttempt)
 			return;
 		else {
-			this.processingAttempt = true
+			this.processingAttempt = true;
 			this.processAttempt();
 		}
 	}
