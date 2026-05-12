@@ -308,6 +308,16 @@ export async function parseToFontCompatibleString(text: string): Promise<string>
 
 }
 
+export async function render_raw(text: string, font: Font): Promise<AttachmentBuilder> {
+    const dataURL = await textToPng(text, font);
+    const base64 = dataURL.replace(/^data:image\/png;base64,/, '');
+	const pngBuffer: Buffer = Buffer.from(base64, "base64");
+
+	const result = new AttachmentBuilder(pngBuffer, { name: 'image.png', });
+	// Convert to script-compatible text and then to png
+	// console.log("result:", result)
+	return result;
+}
 
 export async function render(text: string, font: Font, spacing: boolean = config.rendering.spaceBetweenWords): Promise<AttachmentBuilder> {
 	let parserObjects: Result<any>[];

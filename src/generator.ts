@@ -6,7 +6,7 @@ import {
 	AFFIX_DIACRITICS, AFFIX_TYPE_DIACRITICS, CASE, ILLOCUTION, ILLOCUTION_SHORTCUTS, VALIDATION_SHORTCUTS, CASE_SHORTCUTS, VALIDATION, CASE_ILLOCUTION_VALIDATION, CASE_TO_SEQUENCE, SEQUENCE_TO_CASE, Vv_VOWELS, 
 } from './textConversionInformation.js';
 import { Font, } from './util.js';
-import { render, render, } from './transform.js';
+import { render_raw, } from './transform.js';
 import config from './config.js';
 import { QuizOptions, } from './quiz.js';
 import { AttachmentBuilder } from 'discord.js';
@@ -64,7 +64,7 @@ export async function generateSecondary(settings: QuizOptions): Promise<Generate
 
 	try {
 		return {
-			image: await render(randomChars, font),
+			image: await render_raw(randomChars, font),
 			answer: randomChars,
 		};
 	} catch(e) {
@@ -163,7 +163,7 @@ export async function generateAffix(settings: QuizOptions): Promise<GeneratedQue
 
 	try {
 		return {
-			image: await render(fontChars, font),
+			image: await render_raw(fontChars, font),
 			// if type 3, and vowel not one of exceptions, give both vowel and alternate form
 			answer,
 		};
@@ -201,7 +201,7 @@ export async function generateExtensions(settings: {
 		answer.push(noApostrophe);
 
 	return {
-		image: await render(randomChars, font),
+		image: await render_raw(randomChars, font),
 		answer,
 	};
 }
@@ -230,7 +230,7 @@ export async function generateIllVal(settings: QuizOptions): Promise<{ image: an
 		
 	
 	return {
-		image: await render(fontChars),
+		image: await render_raw(fontChars),
 		answer,
 	};
 }
@@ -292,7 +292,7 @@ export async function generateCaseChar(settings: QuizOptions): Promise<{ image: 
 
 	console.log('casechar:', caseChar);
 	return {
-		image: await render(`${caseChar}`, font),
+		image: await render_raw(`${caseChar}`, font),
 		answer: vowelForm,
 	};
 }
@@ -317,7 +317,7 @@ export async function generatePrimaryBottomExt(settings: QuizOptions): Promise<{
 
 	return {
 		answer,
-		image: await render(formative, settings.font === 'random' ? 'basic' : settings.font, false),
+		image: await render_raw(formative, settings.font === 'random' ? 'basic' : settings.font, false),
 	};
 }
 
