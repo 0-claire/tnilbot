@@ -39,6 +39,7 @@ in {
     ];
     dontNpmBuild = true;
     dontNpmInstall = true;
+    dontCheckForBrokenSymlinks = true;
     buildInputs = [
       pixman
       cairo
