@@ -4,9 +4,10 @@
   },
   "compilerOptions": {
     "skipLibCheck": true,
-    "target": "nodenext",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "target": "esnext",
+    "module": "nodenext",
+    // "moduleResolution": "NodeNext",
+    "moduleResolution": "bundler",
     "moduleDetection": "force",
     "resolveJsonModule": true,
     "types": ["node"],
@@ -15,9 +16,9 @@
     "preserveConstEnums": true,
     "sourceMap": false,
     "noImplicitReturns": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "strict": true
   },
-  "strict": true,
   "declaration": true,
   "include": [
         "src/**/*.ts"

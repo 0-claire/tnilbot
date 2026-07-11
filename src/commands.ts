@@ -1,14 +1,19 @@
 import {
 	SlashCommandBuilder, AttachmentBuilder, SlashCommandSubcommandBuilder, SlashCommandSubcommandsOnlyBuilder,
 	User,
+    Interaction,
+    ChatInputCommandInteraction,
 } from 'discord.js';
 import { render, } from './transform.js';
 import config from './config.js';
 import {initiateQuiz, QuizOptionsModel,} from './quiz.js';
 import {
+    formatResultsForDiscord,
+	searchLexicon, type SearchCommandOptions, type SearchField, 
+} from './search.js';
+import {
 	generateChar, generateSecondary, generateAffix, 
 } from './generator.js';
-import lexicon_json from './resources/lexicon-json/lexicon_en.json' with { type: 'json'};
 
 // define slash command data
 function createSlashCommand(settings: {
@@ -33,14 +38,6 @@ function createSlashCommand(settings: {
 	// return the full slash command object
 	return newBuilder;
 }
-
-type SearchField = "all" | "name" | "description" | "notes" | "value" | "association";
-type SearchCommandOptions = {
-	ignore_punctuation: boolean;
-	terms: string;
-	field: SearchField;
-	regex: boolean;
-};
 
 function createSearchCommandOptions(builder: SlashCommandSubcommandBuilder): typeof builder {
 	builder
@@ -556,20 +553,21 @@ const commands = [
 				}
 			} else {
 				await interaction.reply("Internal error");
-				console.log('result:', result);
+				console.log('result:', result)
 			}
 		},
 	},
 	{ 
 		data: createSlashCommand({
 			name: "search",
-			description: "Search the roots/affixes/morphology for a specific root, affix, morphology category, or morpheme",
+			description: "Search for roots and/or affixes",
+			// description: "Search for roots, affixes, morphology categories, or morphemes",
 		}, builder => {
 			const subcommands = [
 				["lexicon", "Root, affix, and bias search",],
 				["roots", "Search for word roots",],
 				["affixes", "Search for affixes",],
-				["morphology", "Search for morphemes",],
+				// ["morphology", "Search for morphemes",],
 			];
 			subcommands.forEach(([name, description,]) => {
 				builder.addSubcommand(command => {
@@ -582,14 +580,25 @@ const commands = [
 			return builder;
 		})
 		,
-		async exec(interaction) {
+		async exec(interaction: ChatInputCommandInteraction) {
 			const options: SearchCommandOptions = {
-				terms: interaction.options.get('terms')?.value,
+				terms: interaction.options.get('terms')?.value || "",
 				field: interaction.options.get('field')?.value || 'all',
 				ignore_punctuation: interaction.options.get('ignore_punctuation')?.value || true,
 				regex: interaction.options.get('regex')?.value || false,
 			};
-			await interaction.reply("Not implemented");
+			const subcommand = interaction.options['_subcommand'];
+
+			try {
+				const result = searchLexicon(subcommand, {
+					keyword: options.terms,
+					fields: ['notes','description','name','value'],
+				});
+				await interaction.reply(formatResultsForDiscord(result));
+			} catch(e) {
+				console.log(e);
+				await interaction.reply("An error occurred while searching. Please check your options and try again.");
+			};
 		},
 	},
 ];

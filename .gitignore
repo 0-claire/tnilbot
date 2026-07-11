@@ -10,3 +10,8 @@ config.ts
 secrets.json
 result*
 .npmrc
+
+./src/external_gleam/*.beam
+./src/external_gleam/*.ez
+./src/external_gleam/build
+./src/external_gleam/erl_crash.dump
