@@ -3,6 +3,7 @@ import {
 	User,
     Interaction,
     ChatInputCommandInteraction,
+    SlashCommandStringOption,
 } from 'discord.js';
 import { render, } from './transform.js';
 import config from './config.js';
@@ -41,37 +42,39 @@ function createSlashCommand(settings: {
 
 function createSearchCommandOptions(builder: SlashCommandSubcommandBuilder): typeof builder {
 	builder
-		.addBooleanOption(option =>
-			option.setName("ignore_punctuation")
-				.setDescription("Ignore punctuation while searching")
-		)
 		.addStringOption(option => 
 			option
 				.setName('terms')
 				.setDescription("The text to search for")
 				.setRequired(true)
 		)
-		.addStringOption(option =>
+		.addBooleanOption(option =>
+			option.setName("ignore_punctuation")
+				.setDescription("Ignore punctuation while searching")
+		)
+		.addStringOption((option: SlashCommandStringOption) =>
 			option 
 				.setName("field")
-				.addChoices(<{name: string; value: SearchField}>{
-					name: "all",
-					// name: "any (default)",
-					value: "all",
-				}, <{name: string; value: SearchField}>{
-					name: "name",
-					value: "name",
-				}, <{name: string; value: SearchField}>{
-					name: "description",
-					value: "description",
-				}, <{name: string; value: SearchField}>{
-					name: "notes",
-					value: "notes",
-				}, <{name: string; value: SearchField}>{
-					name: "value",
-					value: "value",
-				}
-						   )
+                .setDescription("fields to search")
+				.addChoices(<{name: string, value: SearchField}[]>[
+                    {
+                        name: "all",
+                        // name: "any (default)",
+                        value: "all",
+                    }, {
+                        name: "name",
+                        value: "name",
+                    }, {
+                        name: "description",
+                        value: "description",
+                    }, {
+                        name: "notes",
+                        value: "notes",
+                    }, {
+                        name: "value",
+                        value: "value",
+                    }
+                ])
 		);
 	;
 	return builder;
@@ -567,7 +570,7 @@ const commands = [
 				["lexicon", "Root, affix, and bias search",],
 				["roots", "Search for word roots",],
 				["affixes", "Search for affixes",],
-				// ["morphology", "Search for morphemes",],
+				["morphology", "Search for morphemes",],
 			];
 			subcommands.forEach(([name, description,]) => {
 				builder.addSubcommand(command => {
