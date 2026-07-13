@@ -26,22 +26,34 @@ export function searchLexicon(subcommand: SearchType, options: SearchOptions): S
 	return JSON.parse(search(lexicon as unknown as Lexicon, subcommand, options)) as SearchLexiconResult;
 }
 
-export function formatResultsForDiscord(results: SearchLexiconResult): Parameters<CommandInteraction['reply']>[0] {
+export function formatResultsForDiscord(results: SearchLexiconResult): string[] {
     const { matches, } = results;
     const { roots, affixes, } = matches;
     const {
         standard, accessor, stacking, 
     } = affixes;
 
+    // TODO: write affixes
+
     console.log(JSON.stringify(matches, null, 2));
 
-    let returnedString = `Found ${roots.length + standard.length + accessor.length + stacking.length} results:`;
+    
+    let returned: string[] = serializeRoots(roots);
 
-    for(const root of roots) {
-      returnedString += '\n' + serializeRoot(root)
+    return returned;
+}
+
+function serializeRoots(roots: Root[]): string[] {
+  let returned: string[] = [];
+
+    for(let i = 0; i < roots.length; i++) {
+      const rootA = '\n' + serializeRoot(roots[i]);
+      const rootB = i == roots.length -1 ? "" : '\n' + serializeRoot(roots[i+1]);
+      returned.push(rootA + rootB)
+      i++;
     }
 
-    return returnedString;
+  return returned;
 }
 
 function serializeRoot(root: Root): string {

@@ -5,7 +5,7 @@ import secrets from '../secrets.json' with { type: 'json' };
 import { render, } from './transform.js';
 import config from './config.js';
 import { engagedUsers, quizzes, } from './quiz.js';
-import commands from './commands.js';
+import commands, { searches, updateSearch } from './commands.js';
 // import { type Font, } from './util.js';
 
 // TODO: move code into commands/ and into svg.ts(x) or tnil.ts(x)
@@ -180,18 +180,10 @@ client.on(Events.MessageCreate, async message => {
 });
 
 
-client.on(Events.MessageReactionAdd, async (reaction, emojiAuthor) => {
-	let messageInitiatorId: Snowflake;
-	let message: Message;
-
-	try {
-		if(reaction.partial)
-			await reaction.fetch();
-		message = await reaction.message.fetch();
-		messageInitiatorId = getCommandSenderId(message);
-	} catch(e) {
-		console.log(e);
-	}
+client.on(Events.MessageReactionAdd, async (_reaction, emojiAuthor) => {
+	let message: Message = await _reaction.message.fetch();
+	let reaction = await _reaction.fetch();
+	let messageInitiatorId: Snowflake = getCommandSenderId(message);
 
 
 	if(emojiAuthor.bot) 
@@ -200,18 +192,96 @@ client.on(Events.MessageReactionAdd, async (reaction, emojiAuthor) => {
 	
 	// if the emoji is right, if it was a message sent by us, and if the user who sent it was the same as the one who reacted to it
 	// TODO: 5 day limit
-	if(reaction.emoji.name === '❌' && emojiAuthor.id === messageInitiatorId) {
-		try {
-			console.log('delete based on reaction');
-			await reaction.message.delete();
-		} catch(e) {
-			console.log("Couldn't delete message after emoji reaction");
-		}
-	} else {
+    
+    switch (reaction.emoji.name) {
+      case '❌':
+        if(emojiAuthor.id === messageInitiatorId) {
+            try {
+                console.log('delete based on reaction');
+                await reaction.message.delete();
+            } catch(e) {
+                console.log("Couldn't delete message after emoji reaction");
+            }
+        }
+        break;
+      case '⏮️':
+        if(searches[reaction.message.id]) {
+        updateSearch((await reaction.message.fetch()), (search) => {
+          search.page = 0;
+          return search;
+        })
+        try {
+          searchReactions(message)
+        } catch(e) {
+          console.error("Couldn't reset reaction");
+          console.error(e);
+        }
+      }
+        break;
+      case '⬅️':
+        if(searches[reaction.message.id]) {
+        updateSearch((await reaction.message.fetch()), (search) => {
+          search.page--;
+          return search;
+        })
+      }
+        try {
+          searchReactions(message)
+        } catch(e) {
+          console.error("Couldn't reset reaction");
+          console.error(e);
+        }
+        break;
+      case '➡️':
+        if(searches[reaction.message.id]) {
+        updateSearch((await reaction.message.fetch()), (search) => {
+          search.page++;
+          return search;
+        })
+      }
+        try {
+          searchReactions(message)
+        } catch(e) {
+          console.error("Couldn't reset reaction");
+          console.error(e);
+        }
+        break;
+      case '⏭️':
+        if(searches[reaction.message.id]) {
+        updateSearch(message, (search) => {
+          search.page = search.formattedResults.length -1;
+          return search;
+        })
+      }
+        try {
+          searchReactions(message)
+        } catch(e) {
+          console.error("Couldn't reset reaction");
+          console.error(e);
+        }
+        break;
+
+      default:
+        break;
+    }
 		// console.log('extraneous reaction');
 		// console.log({ emojiAuthor, emoji: reaction.emoji.name, messageInitiatorId, })
-	}
 });
+
+async function searchReactions(message: Message) {
+  for(const _reaction of (await message.awaitReactions())) {
+    const [str, unfetchedReaction] = _reaction;
+    const reaction = await unfetchedReaction.fetch();
+
+    if(['⏮️','⬅️','➡️','⏭️'].find(x => x === reaction.emoji.name || x === reaction.emoji.toString() || x === reaction.emoji.id)) {
+      reaction.remove()
+    }
+    // reaction.emoji.name
+  }
+  for(const emoji of ['⏮️','⬅️','➡️','⏭️']) {
+    await message.react(emoji);
+  }
+}
 
 // type OurMessage<InGuild extends boolean> = typeof Message<InGuild>
 

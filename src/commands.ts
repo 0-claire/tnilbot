@@ -4,6 +4,7 @@ import {
     Interaction,
     ChatInputCommandInteraction,
     SlashCommandStringOption,
+    Message,
 } from 'discord.js';
 import { render, } from './transform.js';
 import config from './config.js';
@@ -15,6 +16,7 @@ import {
 import {
 	generateChar, generateSecondary, generateAffix, 
 } from './generator.js';
+import { SearchLexiconResult } from './lexicon.js';
 
 // define slash command data
 function createSlashCommand(settings: {
@@ -164,6 +166,16 @@ function createQuizCommandOptions(innerBuilder: SlashCommandSubcommandBuilder): 
 // 	},
 // ];
 
+
+// Lexicon searches still active
+// Key is a message ID
+// Used to update messages for pagination
+export const searches: Record<string, {
+    resultCount: number;
+    formattedResults: string[];
+    page: number;
+    timer: ReturnType<typeof setTimeout>;
+}> = {};
 
 const commands = [
 	{ 
@@ -570,7 +582,7 @@ const commands = [
 				["lexicon", "Root, affix, and bias search",],
 				["roots", "Search for word roots",],
 				["affixes", "Search for affixes",],
-				["morphology", "Search for morphemes",],
+				// ["morphology", "Search for morphemes",],
 			];
 			subcommands.forEach(([name, description,]) => {
 				builder.addSubcommand(command => {
@@ -597,7 +609,31 @@ const commands = [
 					keyword: options.terms,
 					fields: ['notes','description','name','value'],
 				});
-				await interaction.reply(formatResultsForDiscord(result));
+
+                const {roots,affixes} = result.matches;
+                const {standard,accessor,stacking} = affixes;
+
+                const results = formatResultsForDiscord(result);
+
+                const upcoming = {
+                    resultCount: roots.length + accessor.length + standard.length + stacking.length,
+                    formattedResults: results,
+                    page: 0,
+                };
+
+				const _reply = await interaction.reply(renderSearchResults(upcoming));
+                const reply = await _reply.fetch();
+
+
+                searches[reply.id] = {
+                    ...upcoming,
+                    timer: searchTimer(reply.id),
+                };
+
+                await reply.react('⏮️').catch();
+                await reply.react('⬅️').catch();
+                await reply.react('➡️').catch();
+                await reply.react('⏭️').catch();
 			} catch(e) {
 				console.log(e);
 				await interaction.reply("An error occurred while searching. Please check your options and try again.");
@@ -605,5 +641,40 @@ const commands = [
 		},
 	},
 ];
+
+function sToMs(ms: number): number {
+    return ms*1000;
+}
+
+function mToMs(ms: number): number {
+    return sToMs(ms*60);
+}
+
+export function deleteSearch(id: string) {
+    delete searches[id];
+}
+
+export function searchTimer(id: string): ReturnType<typeof setTimeout> {
+    return setTimeout(() => {deleteSearch(id)}, mToMs(2))
+}
+
+export function updateSearch(message: Message, cb: (search: typeof searches[string]) => typeof searches[string]) {
+    const searchId = message.id;
+    let search = searches[searchId];
+    clearTimeout(searches[searchId].timer);
+    searches[searchId] = cb(searches[searchId]);
+    search = searches[searchId];
+    message.edit(renderSearchResults(search));
+    search.timer = searchTimer(searchId);
+}
+
+export function renderSearchResults(search: typeof searches[string]): string {
+
+    let returned = `Found **${search.resultCount}** results:\nPage: **${search.page + 1}** of **${search.formattedResults.length}**`;
+
+    returned += search.formattedResults[search.page];
+
+    return returned;
+}
 
 export default commands;
