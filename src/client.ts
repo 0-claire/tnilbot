@@ -221,7 +221,8 @@ client.on(Events.MessageReactionAdd, async (_reaction, emojiAuthor) => {
       case '⬅️':
         if(searches[reaction.message.id]) {
         updateSearch((await reaction.message.fetch()), (search) => {
-          search.page--;
+          if(search.page > 0)
+            search.page--;
           return search;
         })
       }
@@ -235,6 +236,7 @@ client.on(Events.MessageReactionAdd, async (_reaction, emojiAuthor) => {
       case '➡️':
         if(searches[reaction.message.id]) {
         updateSearch((await reaction.message.fetch()), (search) => {
+          if(search.page < search.formattedResults.length -1)
           search.page++;
           return search;
         })
